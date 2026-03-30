@@ -1,0 +1,560 @@
+:root {
+    --bg-dark: #0f172a;
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --primary: #3b82f6;
+    --secondary: #64748b;
+    --success: #10b981;
+    --accent: #f59e0b;
+    --text-main: #f8fafc;
+    --text-dim: #94a3b8;
+    --border: rgba(255, 255, 255, 0.1);
+    
+    /* 隊伍顏色 */
+    --blue-bird: #4a90e2;
+    --black-bird: #6c757d;
+    --green-bird: #20c997;
+    --pink-bird: #e91e63;
+    
+    /* 區別顏色 */
+    --raptor: #ff6b35;
+    --birdie: #4ecdc4;
+    --egg: #ffe66d;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Noto Sans TC', sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    overflow: hidden;
+    height: 100vh;
+}
+
+#app {
+    display: flex;
+    height: 100%;
+}
+
+/* 側邊欄導航 */
+.sidebar {
+    width: 130px;
+    background: rgba(15, 23, 42, 0.95);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 0.5rem;
+    z-index: 100;
+}
+
+.logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 2.5rem;
+    color: var(--primary);
+    text-align: center;
+}
+.logo i { font-size: 1.5rem; }
+
+.nav-links {
+    list-style: none;
+    flex-grow: 1;
+}
+
+.nav-links li {
+    padding: 0.8rem;
+    margin-bottom: 0.4rem;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    transition: all 0.3s ease;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+.nav-links li:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+}
+
+.nav-links li.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.user-status {
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-indicator.online { background: var(--success); }
+
+/* 主要內容區 */
+.content {
+    flex-grow: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    background: radial-gradient(circle at top right, #1e293b, #0f172a);
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+.header-tools {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+/* 分頁切換 */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 卡片設計 */
+.card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+textarea {
+    width: 100%;
+    height: 150px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-main);
+    padding: 1rem;
+    margin: 1rem 0;
+    resize: none;
+}
+
+.btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s;
+}
+
+.btn:active { transform: scale(0.95); }
+
+.btn-primary { background: var(--primary); color: white; }
+.btn-secondary { background: var(--secondary); color: white; }
+.btn-success { background: var(--success); color: white; }
+
+.btn-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* 表格設計 */
+.table-container {
+    background: var(--card-bg);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    text-align: left;
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
+td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+/* 巨大化與專業計分板樣式 */
+.scoreboard {
+    max-width: 1000px;
+    margin: 1.5rem auto;
+}
+
+.score-row {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 1.5rem;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* 換邊邏輯 */
+.score-row.swap-sides {
+    flex-direction: row-reverse;
+}
+
+.score-box {
+    flex: 1;
+    background: var(--card-bg); /* 將由 JS 動態複寫為隊伍顏色 */
+    padding: 2.5rem 1.5rem;
+    border-radius: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s ease;
+    overflow: hidden;
+}
+
+/* 顯示 A/B 側標 */
+.team-label {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.score-box h4 {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    color: white;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+    z-index: 2;
+}
+
+.score-box p {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1rem;
+    z-index: 2;
+}
+
+/* 巨大數字：參考實體 LED 顯示器 */
+.points {
+    font-size: 10rem;
+    font-weight: 900;
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    color: white;
+    line-height: 1;
+    margin: 1rem 0;
+    text-shadow: 
+        3px 3px 0px rgba(0, 0, 0, 0.3),
+        0 15px 45px rgba(0, 0, 0, 0.6);
+    user-select: none;
+    z-index: 2;
+}
+
+/* 換邊按鈕中間區塊 */
+.swap-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+#btn-swap-sides {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+#btn-swap-sides:hover {
+    background: var(--primary);
+    transform: rotate(180deg) scale(1.1);
+    border-color: white;
+}
+
+/* 控制按鈕 */
+.controls {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    z-index: 2;
+}
+
+.controls button {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-size: 2.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(5px);
+}
+
+.controls button:hover {
+    background: white;
+    color: black;
+    transform: translateY(-5px);
+}
+
+/* 報名分組清單樣式 */
+.data-grid {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.area-group {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.area-group h3 {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid var(--primary);
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.team-players {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 1.2rem;
+    border-top: 4px solid var(--secondary);
+    transition: transform 0.2s;
+}
+
+.team-players:hover {
+    transform: scale(1.02);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.team-players strong {
+    display: block;
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+.player-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.player-tag {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    border: 1px solid var(--border);
+}
+
+.player-tag .role-badge {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-left: 5px;
+    padding-left: 5px;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 各隊專屬顏色 (與 CONFIG 同步) */
+.team-blueBird { border-top-color: var(--blue-bird); }
+.team-blackBird { border-top-color: var(--black-bird); }
+.team-greenBird { border-top-color: var(--green-bird); }
+.team-pinkBird { border-top-color: var(--pink-bird); }
+
+/* 提示文字 */
+.hint {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+/* 響應式微調 */
+@media (max-width: 768px) {
+    .sidebar { width: 70px; padding: 1rem 0.5rem; }
+    .logo span, .nav-links span, .user-status span { display: none; }
+    .content { padding: 1rem; }
+    .team-grid { grid-template-columns: 1fr; }
+}
+
+/* 裁判對戰選單：置中且 75% 寬 */
+.setup-match {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+.setup-match select {
+    width: 75%;
+    max-width: 600px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: white;
+    padding: 0.8rem 1.2rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+/* 裁判計分底部面板：並排且左右靠齊 */
+.referee-bottom-panel {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.referee-field-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.ref-label {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+/* 裁判輸入框：寬度 1/3 (相對於底盤), 高度縮減 */
+.referee-field-group input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: white;
+    padding: 0.5rem 1rem; /* 高度縮小 1/2 (原本是 1rem) */
+    border-radius: 8px;
+    width: 33%;
+    min-width: 150px;
+    font-size: 1rem;
+}
+
+/* 比賽結束按鈕：維持大小與輸入框同行 */
+.referee-bottom-panel .btn-lg {
+    padding: 0.8rem 2.5rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 50px;
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+    white-space: nowrap;
+}
+/* 狀態徽章樣式 */
+.status-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+.status-pending { background: var(--secondary); color: white; opacity: 0.7; }
+.status-done { background: var(--success); color: white; border: 1px solid rgba(255,255,255,0.2); }
+
+/* 待分配人員與動畫 */
+.player-tag.unassigned {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed var(--border);
+    color: var(--text-dim);
+    animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+    0% { border-color: rgba(255, 255, 255, 0.1); }
+    50% { border-color: var(--primary); }
+    100% { border-color: rgba(255, 255, 255, 0.1); }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>羽球俱樂部計分與積分系統</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 導航欄 -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-shuttlecock"></i>
+                <span>羽球大師</span>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-tab="registration"><i class="fas fa-user-plus"></i> 報名管理</li>
+                <li data-tab="schedule"><i class="fas fa-calendar-alt"></i> 循環賽程</li>
+                <li data-tab="bracket"><i class="fas fa-sitemap"></i> 循環籤表</li>
+                <li data-tab="livescore"><i class="fas fa-tv"></i> 即時比分</li>
+                <li data-tab="referee"><i class="fas fa-whistle"></i> 裁判計分</li>
+            </ul>
+            <div class="user-status">
+                <div class="status-indicator online"></div>
+                <span>系統已連線</span>
+            </div>
+        </nav>
+
+        <!-- 主要內容區 -->
+        <main class="content">
+            <header>
+                <h1 id="page-title">報名管理</h1>
+                <div class="header-tools">
+                    <span id="current-year-month">2026-03</span>
+                    <button id="refresh-all" class="btn-icon" title="重新整理"><i class="fas fa-sync"></i></button>
+                    <button id="btn-diagnostic" class="btn-icon" onclick="toggleDebug()" title="系統診斷"><i class="fas fa-terminal"></i></button>
+                </div>
+            </header>
+
+            <!-- 分頁內容 -->
+            <section id="tab-registration" class="tab-content active">
+                <div class="card import-card">
+                    <h3><i class="fas fa-file-import"></i> 批量匯入報名名單</h3>
+                    <p class="hint">格式：姓名,區 (例如：王小明,猛禽)</p>
+                    <textarea id="import-data" placeholder="範例（姓名,區）：&#10;王小明,猛禽&#10;李小華,小鳥&#10;張大同,鳥蛋"></textarea>
+                    <div class="actions">
+                        <button id="btn-import" onclick="Registration.importData()" class="btn btn-primary">匯入資料</button>
+                        <button id="btn-auto-group" onclick="Registration.autoGroup()" class="btn btn-secondary">隨機分組</button>
+                    </div>
+                </div>
+
+                <div class="data-grid" id="reg-list-container">
+                    <!-- 分組結果將顯示於此 -->
+                </div>
+            </section>
+
+            <section id="tab-schedule" class="tab-content">
+                <div class="card-header" style="justify-content: flex-start; margin-bottom: 1.5rem; gap: 1rem;">
+                    <h2><i class="fas fa-calendar-alt"></i> 2. 循環賽程管理</h2>
+                    <button id="btn-gen-schedule" class="btn btn-success btn-sm">
+                        <i class="fas fa-magic"></i> 自動產生賽程
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table id="schedule-table">
+                        <thead>
+                            <tr>
+                                <th>輪次</th>
+                                <th>區</th>
+                                <th>場地</th>
+                                <th>A隊 (隊員1,2)</th>
+                                <th>比分</th>
+                                <th>B隊 (隊員1,2)</th>
+                                <th>裁判</th>
+                                <th>比賽狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 賽程資料 -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="tab-bracket" class="tab-content">
+                <div class="bracket-grid" id="bracket-container">
+                    <!-- 四角循環賽圖 -->
+                </div>
+            </section>
+
+            <section id="tab-livescore" class="tab-content">
+                <div class="live-courts">
+                    <div class="court-card" id="court-a">
+                        <div class="court-badge">場地 A (猛禽區)</div>
+                        <div class="score-display">
+                            <div class="team-a team">
+                                <span class="team-name">--</span>
+                                <span class="score">0</span>
+                            </div>
+                            <div class="vs">VS</div>
+                            <div class="team-b team">
+                                <span class="score">0</span>
+                                <span class="team-name">--</span>
+                            </div>
+                        </div>
+                        <div class="court-footer">進行中...</div>
+                    </div>
+                    <!-- 其他場地 -->
+                </div>
+            </section>
+
+            <section id="tab-referee" class="tab-content">
+                <div class="referee-panel">
+                    <div class="setup-match">
+                        <select id="select-match" style="width: 100%; max-width: 600px;">
+                            <option value="">-- 請選擇比賽 (輪次, 區, 場地, 對戰名單) --</option>
+                        </select>
+                    </div>
+
+                    <div id="scoreboard" class="scoreboard hidden">
+                        <div class="score-row" id="score-row-container">
+                            <!-- A隊得分區 (預設在左) -->
+                            <div class="score-box" id="score-box-a">
+                                <span class="team-label">TEAM A</span>
+                                <h4 id="ref-team-a-name">藍鳥隊</h4>
+                                <p id="ref-team-a-players">隊員1 / 隊員2</p>
+                                <div class="points" id="ref-score-a">0</div>
+                                <div class="controls">
+                                    <button onclick="changeScore('A', 1)">+</button>
+                                    <button onclick="changeScore('A', -1)">-</button>
+                                </div>
+                            </div>
+
+                            <!-- 置中換邊案按鈕 -->
+                            <div class="swap-action">
+                                <button id="btn-swap-sides" onclick="Referee.swapSides()" title="交換場地">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                            </div>
+
+                            <!-- B隊得分區 (預設在右) -->
+                            <div class="score-box" id="score-box-b">
+                                <span class="team-label">TEAM B</span>
+                                <h4 id="ref-team-b-name">黑鳥隊</h4>
+                                <p id="ref-team-b-players">隊員1 / 隊員2</p>
+                                <div class="points" id="ref-score-b">0</div>
+                                <div class="controls">
+                                    <button onclick="changeScore('B', 1)">+</button>
+                                    <button onclick="changeScore('B', -1)">-</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="referee-bottom-panel">
+                            <div class="referee-field-group">
+                                <label for="ref-name" class="ref-label">請輸入裁判姓名</label>
+                                <input type="text" id="ref-name" placeholder="姓名">
+                            </div>
+                            <button id="btn-submit-score" class="btn btn-primary btn-lg">比賽結束</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div id="debug-console" style="margin-top: 3rem; padding: 1rem; background: #000; border: 1px solid #333; border-radius: 8px; font-family: monospace; font-size: 0.8rem; color: #0f0; display: none;">
+                <div style="border-bottom: 1px solid #333; margin-bottom: 5px; padding-bottom: 5px;">[ 系統診斷日誌 ]</div>
+                <div id="debug-log"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/config.js?v=3"></script>
+    <script src="js/api.js?v=3"></script>
+    <script src="js/registration.js?v=3"></script>
+    <script src="js/schedule.js?v=3"></script>
+    <script src="js/bracket.js?v=3"></script>
+    <script src="js/livescore.js?v=3"></script>
+    <script src="js/referee.js?v=3"></script>
+    <script src="js/app.js?v=3"></script>
+    <script>
+        function toggleDebug() {
+            const console = document.getElementById('debug-console');
+            console.style.display = console.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // 加入除錯視窗切換 (按 Ctrl + Shift + D 開放)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                toggleDebug();
+            }
+        });
+        
+        function logDebug(msg) {
+            const log = document.getElementById('debug-log');
+            const div = document.createElement('div');
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            log.appendChild(div);
+            if (log.childNodes.length > 10) log.removeChild(log.firstChild);
+        }
+    </script>
+</body>
+</html>
