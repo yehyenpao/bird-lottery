@@ -55,14 +55,41 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 1rem;
-    font-weight: 700;
+    gap: 0.4rem;
     margin-bottom: 2.5rem;
     color: var(--primary);
     text-align: center;
 }
-.logo i { font-size: 1.5rem; }
+
+.logo i { font-size: 1.8rem; }
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.brand-name {
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.sub-brand {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-top: 0.1rem;
+    position: relative;
+    animation: bird-pulse 2.5s infinite ease-in-out;
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+@keyframes bird-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.08); opacity: 1; filter: brightness(1.2); }
+}
 
 .nav-links {
     list-style: none;
@@ -233,6 +260,31 @@ td {
     padding: 1rem;
     border-bottom: 1px solid var(--border);
 }
+
+/* 裁判計分頂部資訊條 */
+.referee-meta {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 0.4rem;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 10px;
+    margin: 0 auto 1rem;
+    width: fit-content;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.meta-clock, .meta-start-time {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.meta-clock span { color: var(--primary); font-weight: bold; }
+.meta-start-time span { color: var(--accent); font-weight: bold; }
 
 /* 巨大化與專業計分板樣式 */
 .scoreboard {
@@ -557,4 +609,49 @@ td {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* 預賽結果透視表樣式 */
+.results-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.pivot-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.pivot-table th {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--primary);
+    padding: 1.2rem 1rem;
+    text-align: center;
+    font-weight: 700;
+    border-bottom: 2px solid var(--border);
+}
+
+.pivot-table td {
+    padding: 1.2rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+}
+
+/* 排序榮譽樣式 */
+.pivot-table tr.rank-1 { background: rgba(245, 158, 11, 0.15); }
+.pivot-table tr.rank-2 { background: rgba(148, 163, 184, 0.15); }
+.pivot-table tr.rank-3 { background: rgba(180, 83, 9, 0.15); }
+
+.pivot-table tr.rank-1 td:nth-child(2) { color: #fbbf24; font-weight: 800; }
+.pivot-table tr:hover { background: rgba(255, 255, 255, 0.05); }
+
+.pivot-table .badge-points {
+    background: var(--primary);
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-weight: bold;
 }

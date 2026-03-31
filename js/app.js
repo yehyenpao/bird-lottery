@@ -51,5 +51,17 @@ function loadTabData(tabId) {
         case "referee":
             if (typeof Referee !== "undefined") Referee.load();
             break;
+        case "results":
+            if (typeof Results !== "undefined") Results.load();
+            break;
+        case "chasing":
+            if (typeof Chasing !== "undefined") Chasing.load();
+            break;
+        case "chasing_referee":
+            if (typeof ChasingReferee !== "undefined") ChasingReferee.load();
+            break;
+        case "finals":
+            if (typeof Finals !== "undefined") Finals.load();
+            break;
     }
 }

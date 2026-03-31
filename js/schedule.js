@@ -1,4 +1,15 @@
 const Schedule = {
+    formatTime(timeStr) {
+        if (!timeStr) return "-";
+        // 如果是 Date 物件或包含 T 的 ISO 字串，嘗試擷取時間部分
+        const str = String(timeStr);
+        if (str.includes(" ") || str.includes("T")) {
+            const timePart = str.split(/[ T]/)[1];
+            return timePart ? timePart.slice(0, 5) : str.slice(0, 5);
+        }
+        return str.slice(0, 5); // 確保只取 HH:mm
+    },
+
     async load() {
         const res = await API.getSchedule();
         if (res && res.status === "success") {
@@ -29,6 +40,7 @@ const Schedule = {
             const areaName = match.區 || match.區別 || "";
             html += `
                 <tr>
+                    <td>${this.formatTime(match.比賽時間)}</td>
                     <td>第 ${match.輪次} 輪</td>
                     <td><span class="badge" style="background:${CONFIG.AREA_COLORS[areaName] || '#666'}">${areaName}</span></td>
                     <td>場地 ${match.場地}</td>

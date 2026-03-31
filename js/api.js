@@ -1,7 +1,9 @@
 const API = {
     async call(action, data = null) {
         const baseUrl = CONFIG.API_URL.trim();
-        let url = `${baseUrl}?action=${action}&yearMonth=${CONFIG.YEAR_MONTH}`;
+        const yearMonthEl = document.getElementById("current-year-month");
+        const currentYM = yearMonthEl ? yearMonthEl.innerText.trim() : CONFIG.YEAR_MONTH;
+        let url = `${baseUrl}?action=${action}&yearMonth=${currentYM}`;
         
         if (data) {
             const dataStr = encodeURIComponent(JSON.stringify(data));
@@ -43,9 +45,15 @@ const API = {
     getRegistrations() { return this.call("getRegistrations"); },
     getSchedule() { return this.call("getSchedule"); },
     getLiveScores() { return this.call("getLiveScores"); },
+    getChasingSchedule() { return this.call("getChasingSchedule"); },
     getRankings() { return this.call("getRankings"); },
     addRegistrations(items) { return this.call("addRegistrations", items); },
     autoGroup() { return this.call("autoGroup"); },
     generateSchedule() { return this.call("generateSchedule"); },
-    updateScore(scoreData) { return this.call("updateScore", scoreData); }
+    updateScore(scoreData) { return this.call("updateScore", scoreData); },
+    updateChasingScore(scoreData) { return this.call("updateChasingScore", scoreData); },
+    updatePlayerOrder(data) { return this.call("updatePlayerOrder", data); },
+    updatePlayerOrder(data) { return this.call("updatePlayerOrder", data); },
+    generateChasingSchedule() { return this.call("generateChasingSchedule"); },
+    generateFinals() { return this.call("generateFinals"); }
 };
