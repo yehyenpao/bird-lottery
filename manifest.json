@@ -1,0 +1,22 @@
+{
+  "name": "羽球俱樂部計分與積分系統",
+  "short_name": "鳥樂賽",
+  "description": "羽毛球大聯盟裁判計分與球友即時比分看板",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Badminton_icon.svg/1024px-Badminton_icon.svg.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Badminton_icon.svg/1024px-Badminton_icon.svg.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -27,20 +27,32 @@ const Registration = {
             const lines = text.split("\n").filter(line => line.trim() !== "");
             const items = lines.map((line, index) => {
                 const parts = line.split(",").map(s => s.trim());
-                if (parts.length < 2) {
-                    console.warn(`第 ${index + 1} 行格式不符，已跳過:`, line);
-                    return null;
+                if (parts.length < 1) return null; // 完全空白行跳過
+                
+                let name = parts[0];
+                let team = "";
+                let area = "";
+
+                if (parts.length >= 3) {
+                    // 標準新格式：姓名,隊名,區 (例如：王小明,藍鳥,猛禽)
+                    team = parts[1];
+                    area = parts[2];
+                } else if (parts.length === 2) {
+                    // 相容舊格式：姓名,區 (例如：李四,小鳥)
+                    area = parts[1];
                 }
-                const [name, area] = parts;
-                const role = "球員"; // 預設身分
+                
+                if (!name) return null; // 無姓名跳過
+
                 return {
                     yearMonth: CONFIG.YEAR_MONTH,
-                    name, role, area
+                    name, team, area,
+                    role: "球員"
                 };
             }).filter(item => item !== null);
 
             if (items.length === 0) {
-                alert("沒有有效的資料可以匯入，請檢查格式是否為：姓名,區");
+                alert("沒有有效的資料可以匯入，請檢查格式是否正確。");
                 return;
             }
 
@@ -55,16 +67,18 @@ const Registration = {
             }
         } catch (err) {
             console.error("匯入過程發生未預期錯誤:", err);
-            alert("匯入失敗，請檢查主控台 (F12) 的 Error 訊息。");
+            alert("匯入失敗，請檢查格式或網路連線。");
         }
     },
 
     async autoGroup() {
-        if (!confirm("確定要執行隨機分組嗎？這將會覆蓋現有的分組結果。")) return;
+        if (!confirm("確定要執行智慧分組嗎？\n系統將「保留」您已經手動指定的隊名，並自動將其餘名額補進尚未滿員 (6人) 的隊伍中。")) return;
         const res = await API.autoGroup();
         if (res && res.status === "success") {
             alert(res.message);
             this.load();
+        } else {
+            alert("分組失敗: " + (res ? res.message : "請檢查人數是否符合 24 人規則"));
         }
     },
 

@@ -26,8 +26,17 @@ const Results = {
             };
         });
 
-        // 2. 按輪次分組 (每輪包含三區對戰)
+        // 2. 按輪次分組
         const roundGroups = {};
+        const h2hWins = {}; // 對戰勝場矩陣
+        const clean = (s) => String(s || "").replace(/\s+/g, "").trim();
+        
+        CONFIG.TEAMS.forEach(t1 => {
+            const c1 = clean(t1);
+            h2hWins[c1] = {};
+            CONFIG.TEAMS.forEach(t2 => h2hWins[c1][clean(t2)] = 0);
+        });
+
         matches.forEach(m => {
             if (!m.輪次) return;
             const rid = m.輪次;
@@ -38,8 +47,10 @@ const Results = {
         // 3. 處理每一輪的積分與勝負
         Object.keys(roundGroups).forEach(rid => {
             const group = roundGroups[rid];
-            const teamA = group[0].A隊名;
-            const teamB = group[0].B隊名;
+            const teamA = clean(group[0].A隊名);
+            const teamB = clean(group[0].B隊名);
+
+            if (!stats[teamA] || !stats[teamB]) return;
 
             let aWins = 0;
             let bWins = 0;
@@ -48,25 +59,24 @@ const Results = {
                 const sA = parseInt(m.A隊比分 || 0);
                 const sB = parseInt(m.B隊比分 || 0);
 
-                // 累計個人比數 (總得分/失分)
                 stats[teamA].totalScored += sA;
                 stats[teamA].totalConceded += sB;
                 stats[teamB].totalScored += sB;
                 stats[teamB].totalConceded += sA;
 
-                // 判定單場勝負 (給予勝場/敗場數統計)
                 if (sA > sB) {
                     aWins++;
                     stats[teamA].matchWins++;
                     stats[teamB].matchLosses++;
+                    h2hWins[teamA][teamB]++;
                 } else if (sB > sA) {
                     bWins++;
                     stats[teamB].matchWins++;
                     stats[teamA].matchLosses++;
+                    h2hWins[teamB][teamA]++;
                 }
             });
 
-            // 4. 定義團體積分 (三戰兩勝制)
             if (aWins > bWins) {
                 stats[teamA].totalPoints += 3;
                 stats[teamA].roundWins += 1;
@@ -87,9 +97,20 @@ const Results = {
             return s;
         });
 
-        // 6. 排序邏輯：積分 > 正負商
+        // 6. 排序邏輯：積分 > 對戰勝場 > 正負商
         resultList.sort((a, b) => {
+            const nameA = clean(a.teamName);
+            const nameB = clean(b.teamName);
+
+            // Stage 1: 積分
             if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+
+            // Stage 2: 對戰勝場 (Head-to-Head)
+            const winsA = h2hWins[nameA][nameB] || 0;
+            const winsB = h2hWins[nameB][nameA] || 0;
+            if (winsA !== winsB) return winsB - winsA;
+
+            // Stage 3: 正負商
             return b.quotient - a.quotient;
         });
 

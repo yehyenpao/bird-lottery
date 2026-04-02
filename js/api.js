@@ -53,7 +53,9 @@ const API = {
     updateScore(scoreData) { return this.call("updateScore", scoreData); },
     updateChasingScore(scoreData) { return this.call("updateChasingScore", scoreData); },
     updatePlayerOrder(data) { return this.call("updatePlayerOrder", data); },
-    updatePlayerOrder(data) { return this.call("updatePlayerOrder", data); },
     generateChasingSchedule() { return this.call("generateChasingSchedule"); },
-    generateFinals() { return this.call("generateFinals"); }
+    generateFinals() { return this.call("generateFinals"); },
+    calculatePoints(manualData) { return this.call("calculatePoints", manualData); },
+    getSpecialRecords() { return this.call("getSpecialRecords"); },
+    saveSpecialRecords(data) { return this.call("saveSpecialRecords", data); }
 };

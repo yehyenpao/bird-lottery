@@ -3,7 +3,25 @@ const ChasingReferee = {
     scoreA: 0,
     scoreB: 0,
     isSwapped: false,
+    wakeLock: null,
 
+    async requestWakeLock() {
+        if ('wakeLock' in navigator) {
+            try {
+                this.wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {
+                console.error('Wake Lock error:', err);
+            }
+        }
+    },
+
+    releaseWakeLock() {
+        if (this.wakeLock !== null) {
+            this.wakeLock.release().then(() => {
+                this.wakeLock = null;
+            });
+        }
+    },
     async load() {
         if (window.logDebug) window.logDebug("[CHASING] 正在載入追分賽程...");
         
@@ -62,11 +80,13 @@ const ChasingReferee = {
                 this.currentMatch = null;
                 const scoreboard = document.getElementById("chg-scoreboard");
                 if (scoreboard) scoreboard.classList.add("hidden");
+                this.releaseWakeLock();
             }
         };
     },
 
     loadMatch(match) {
+        this.requestWakeLock();
         this.currentMatch = match;
         this.scoreA = parseInt(match.A隊比分 || 0);
         this.scoreB = parseInt(match.B隊比分 || 0);
@@ -168,6 +188,7 @@ const ChasingReferee = {
         
         await this.syncScore(true);
         alert("追分接力賽紀錄成功！");
+        this.releaseWakeLock();
         this.load(); // 重新整理下拉選單
     }
 };

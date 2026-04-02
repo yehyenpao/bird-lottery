@@ -7,6 +7,7 @@ const CONFIG = {
 
     TEAMS: ["藍鳥隊", "黑鳥隊", "青鳥隊", "粉鳥隊"],
     AREAS: ["猛禽", "小鳥", "鳥蛋"],
+    SHEET_POINTS: "積點紀錄",
 
     // 隊伍顏色映射 (用於 UI 呈現)
     TEAM_COLORS: {

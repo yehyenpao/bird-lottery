@@ -3,7 +3,25 @@ const Referee = {
     currentMatch: null,
     actualStartTime: null,
     clockInterval: null,
+    wakeLock: null,
 
+    async requestWakeLock() {
+        if ('wakeLock' in navigator) {
+            try {
+                this.wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {
+                console.error('Wake Lock error:', err);
+            }
+        }
+    },
+
+    releaseWakeLock() {
+        if (this.wakeLock !== null) {
+            this.wakeLock.release().then(() => {
+                this.wakeLock = null;
+            });
+        }
+    },
     async load() {
         const res = await API.getSchedule();
         if (res && res.status === "success") {
@@ -50,6 +68,7 @@ const Referee = {
         if (idx === "") {
             this.currentMatch = null;
             scoreboard.classList.add("hidden");
+            this.releaseWakeLock();
             return;
         }
 
@@ -57,6 +76,7 @@ const Referee = {
         if (!match) return;
 
         this.currentMatch = { ...match };
+        this.requestWakeLock();
         
         // 修正顯示邏輯：
         // 1. 如果是「待賽」狀態，代表尚未正式開賽，顯示 -- : --
@@ -171,6 +191,7 @@ const Referee = {
         this.currentMatch = null;
         document.getElementById("scoreboard").classList.add("hidden");
         document.getElementById("select-match").value = "";
+        this.releaseWakeLock();
         this.load();
     }
 };
