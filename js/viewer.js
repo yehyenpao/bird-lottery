@@ -1,75 +1,109 @@
 const Viewer = {
     async loadSchedule() {
-        const tbodyRR = document.querySelector("#v-schedule-table tbody");
-        const tbodyChasing = document.querySelector("#v-chasing-table tbody");
+        const rrContainer = document.getElementById("v-rr-list-container");
+        const chasingContainer = document.getElementById("v-chasing-list-container");
         
-        if (!tbodyRR || !tbodyChasing) return;
+        if (!rrContainer || !chasingContainer) return;
 
-        tbodyRR.innerHTML = "<tr><td colspan='7'>載入中...</td></tr>";
-        tbodyChasing.innerHTML = "<tr><td colspan='7'>載入中...</td></tr>";
+        rrContainer.innerHTML = "<div style='text-align:center; padding: 2rem; width: 100%;'><i class='fas fa-spinner fa-spin fa-2x'></i><br>載入中...</div>";
+        chasingContainer.innerHTML = "<div style='text-align:center; padding: 2rem; width: 100%;'><i class='fas fa-spinner fa-spin fa-2x'></i><br>載入中...</div>";
 
         try {
             const rrData = await API.getSchedule();
             const chData = await API.getChasingSchedule();
             
-            // 渲染循環賽
+            // 渲染循環賽 (Cards)
             if (rrData && rrData.data) {
-                tbodyRR.innerHTML = "";
+                rrContainer.innerHTML = "";
                 if (rrData.data.length === 0) {
-                    tbodyRR.innerHTML = "<tr><td colspan='7'>目前尚無賽程資料</td></tr>";
+                    rrContainer.innerHTML = "<div class='card' style='text-align:center; width:100%;'>目前尚無賽程資料</div>";
                 } else {
                     rrData.data.forEach(m => {
                         const status = m["比賽狀態"] || "待賽";
                         const isDone = status.includes("完賽");
-                        const statusHtml = isDone ? `<span class="status-badge status-done">已完賽</span>` : `<span class="status-badge status-pending">${status}</span>`;
-                        const aScore = isDone ? `<strong>${m["A隊比分"]||0}</strong>` : "-";
-                        const bScore = isDone ? `<strong>${m["B隊比分"]||0}</strong>` : "-";
+                        const isLive = status.includes("進行中");
+                        const statusHtml = isDone ? `<span class="status-badge status-done">已完賽</span>` : (isLive ? `<span class="status-badge status-live" style="background:#ff4757; color:white; animation: pulse 1.5s infinite;">即時比分</span>` : `<span class="status-badge status-pending">${status}</span>`);
                         
-                        tbodyRR.innerHTML += `
-                            <tr>
-                                <td>${m["比賽時間"] || ""}</td>
-                                <td>${m["序號"] || ""}</td>
-                                <td>${m["輪次"] || ""}<br><small>${m["場地"] || ""}</small></td>
-                                <td>${m["A隊名"] || ""}<br><small>${m["A隊員1"] || ""}, ${m["A隊員2"] || ""}</small></td>
-                                <td style="text-align:center;">${aScore} : ${bScore}</td>
-                                <td>${m["B隊名"] || ""}<br><small>${m["B隊員1"] || ""}, ${m["B隊員2"] || ""}</small></td>
-                                <td>${statusHtml}<br><small>${m["裁判"] || ""}</small></td>
-                            </tr>
+                        // User requested to show scores even if not finished
+                        const aScore = m["A隊比分"] || 0;
+                        const bScore = m["B隊比分"] || 0;
+                        
+                        rrContainer.innerHTML += `
+                            <div class="card match-card" style="padding: 1.2rem; border-left: 4px solid var(--primary);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <span style="color:var(--text-dim); font-size: 0.9rem;"><i class="far fa-clock"></i> ${m["比賽時間"] || ""}</span>
+                                    <span style="color:var(--primary); font-weight:bold;">序號: ${m["序號"] || ""}</span>
+                                    ${statusHtml}
+                                </div>
+                                <div style="color: var(--raptor); font-size: 0.85rem; margin-bottom:0.5rem;">
+                                    第 ${m["輪次"]} 輪 - ${m["區"]} (${m["場地"]}場)
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap: 10px;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="font-weight:bold; font-size:1.1rem; color:white;">${m["A隊名"] || ""}</div>
+                                        <small style="color:var(--text-dim);">${m["A隊員1"] || ""}, ${m["A隊員2"] || ""}</small>
+                                    </div>
+                                    <div style="font-size:1.8rem; font-weight:bold; color:var(--accent); min-width: 80px; text-align:center; padding: 5px 10px; background:rgba(0,0,0,0.3); border-radius:8px;">
+                                        ${aScore} : ${bScore}
+                                    </div>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="font-weight:bold; font-size:1.1rem; color:white;">${m["B隊名"] || ""}</div>
+                                        <small style="color:var(--text-dim);">${m["B隊員1"] || ""}, ${m["B隊員2"] || ""}</small>
+                                    </div>
+                                </div>
+                                ${m["裁判"] ? `<div style="text-align:right; margin-top:0.8rem; font-size:0.85rem; color:var(--text-dim); border-top: 1px dashed rgba(255,255,255,0.05); padding-top:0.5rem;">裁判: ${m["裁判"]}</div>` : ''}
+                            </div>
                         `;
                     });
                 }
             }
 
-            // 渲染追分賽與冠軍戰
+            // 渲染追分賽與冠軍戰 (Cards)
             if (chData && chData.data) {
-                tbodyChasing.innerHTML = "";
+                chasingContainer.innerHTML = "";
                 if (chData.data.length === 0) {
-                    tbodyChasing.innerHTML = "<tr><td colspan='7'>目前尚無追分賽資料</td></tr>";
+                    chasingContainer.innerHTML = "<div class='card' style='text-align:center; width:100%;'>目前尚無追分賽資料</div>";
                 } else {
                     chData.data.forEach(m => {
                         const status = m["比賽狀態"] || "待賽";
                         const isDone = status.includes("完賽");
-                        const statusHtml = isDone ? `<span class="status-badge status-done">已完賽</span>` : `<span class="status-badge status-pending">${status}</span>`;
-                        const aScore = isDone ? `<strong>${m["A隊比分"]||0}</strong>` : "-";
-                        const bScore = isDone ? `<strong>${m["B隊比分"]||0}</strong>` : "-";
+                        const isLive = status.includes("進行中");
+                        const statusHtml = isDone ? `<span class="status-badge status-done">已完賽</span>` : (isLive ? `<span class="status-badge status-live" style="background:#ff4757; color:white; animation: pulse 1.5s infinite;">即時比分</span>` : `<span class="status-badge status-pending">${status}</span>`);
                         
-                        tbodyChasing.innerHTML += `
-                            <tr>
-                                <td>${m["輪次"] || ""}</td>
-                                <td>${m["區"] || ""}</td>
-                                <td>${m["場地"] || ""}</td>
-                                <td>${m["A隊名"] || ""}<br><small>${m["A隊員1"] || ""}, ${m["A隊員2"] || ""}</small></td>
-                                <td style="text-align:center;">${aScore} : ${bScore}</td>
-                                <td>${m["B隊名"] || ""}<br><small>${m["B隊員1"] || ""}, ${m["B隊員2"] || ""}</small></td>
-                                <td>${statusHtml}</td>
-                            </tr>
+                        const aScore = m["A隊比分"] || 0;
+                        const bScore = m["B隊比分"] || 0;
+                        
+                        chasingContainer.innerHTML += `
+                            <div class="card match-card" style="padding: 1.2rem; border-left: 4px solid var(--accent);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <span style="color:var(--accent); font-weight:bold;">${m["區"] || ""}</span>
+                                    ${statusHtml}
+                                </div>
+                                <div style="color: var(--text-dim); font-size: 0.85rem; margin-bottom:0.5rem;">
+                                    ${m["輪次"] || ""} - ${m["場地"]}場
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap: 10px;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="font-weight:bold; font-size:1.1rem; color:white;">${m["A隊名"] || ""}</div>
+                                        <small style="color:var(--text-dim);">${m["A隊員1"] || ""}, ${m["A隊員2"] || ""}</small>
+                                    </div>
+                                    <div style="font-size:1.8rem; font-weight:bold; color:var(--accent); min-width: 80px; text-align:center; padding: 5px 10px; background:rgba(0,0,0,0.3); border-radius:8px;">
+                                        ${aScore} : ${bScore}
+                                    </div>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="font-weight:bold; font-size:1.1rem; color:white;">${m["B隊名"] || ""}</div>
+                                        <small style="color:var(--text-dim);">${m["B隊員1"] || ""}, ${m["B隊員2"] || ""}</small>
+                                    </div>
+                                </div>
+                                ${m["裁判"] ? `<div style="text-align:right; margin-top:0.8rem; font-size:0.85rem; color:var(--text-dim); border-top: 1px dashed rgba(255,255,255,0.05); padding-top:0.5rem;">裁判: ${m["裁判"]}</div>` : ''}
+                            </div>
                         `;
                     });
                 }
             }
         } catch(e) {
-            if(tbodyRR) tbodyRR.innerHTML = "<tr><td colspan='7'>載入失敗</td></tr>";
-            if(tbodyChasing) tbodyChasing.innerHTML = "<tr><td colspan='7'>載入失敗</td></tr>";
+            if(rrContainer) rrContainer.innerHTML = "<div class='card' style='color:red;'>載入失敗</div>";
+            if(chasingContainer) chasingContainer.innerHTML = "<div class='card' style='color:red;'>載入失敗</div>";
         }
     },
 
@@ -165,35 +199,68 @@ const Viewer = {
     },
 
     async loadPoints() {
-        const tbody = document.getElementById("v-points-tbody");
-        if (!tbody) return;
-        tbody.innerHTML = "<tr><td colspan='5'>載入中...</td></tr>";
+        const grid = document.getElementById("v-points-grid");
+        if (!grid) return;
+        grid.innerHTML = "<div style='text-align:center; padding: 2rem; grid-column: 1 / -1;'><i class='fas fa-spinner fa-spin fa-2x'></i><br>載入全體球員資料與頭像中...</div>";
         
         try {
             const currentYM = document.getElementById("current-year-month").innerText.trim();
-            const url = `${CONFIG.API_URL}?action=calculatePoints&yearMonth=${currentYM}&data=%7B%7D`; 
+            const ptsUrl = `${CONFIG.API_URL}?action=calculatePoints&yearMonth=${currentYM}&data=%7B%7D`; 
             
-            const res = await fetch(url).then(r=>r.json());
-            if (res && res.data) {
-                tbody.innerHTML = "";
-                res.data.forEach((p, idx) => {
-                    const tr = document.createElement("tr");
-                    if (idx === 0) tr.classList.add("rank-1");
-                    else if (idx === 1) tr.classList.add("rank-2");
-                    else if (idx === 2) tr.classList.add("rank-3");
-                    
-                    tr.innerHTML = `
-                        <td>${idx + 1}</td>
-                        <td>${p.name}</td>
-                        <td>${p.team}</td>
-                        <td>${p.area}</td>
-                        <td><span class="badge-points" style="font-size:1.2rem;">${p.totalPts}</span></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+            // 並發請求：抓取本期積分、與球員照片 Mapping
+            const [ptsRes, infoRes] = await Promise.all([
+                fetch(ptsUrl).then(r=>r.json()),
+                API.getPlayersInfo()
+            ]);
+
+            if (ptsRes && ptsRes.data) {
+                grid.innerHTML = "";
+                const photoMap = (infoRes && infoRes.status === "success") ? infoRes.data : {};
+                const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+
+                // 取前 60 名
+                const topPlayers = ptsRes.data.slice(0, 60);
+
+                let currentRank = 1;
+                let previousScore = -1;
+                let actualRankIdx = 0;
+
+                if (topPlayers.length === 0) {
+                    grid.innerHTML = "<div class='card' style='grid-column: 1 / -1; text-align:center;'>無積分資料</div>";
+                } else {
+                    topPlayers.forEach((p) => {
+                        actualRankIdx++;
+                        if (p.totalPts !== previousScore) {
+                            currentRank = actualRankIdx;
+                            previousScore = p.totalPts;
+                        }
+
+                        const rankClass = currentRank <= 3 ? `rank-${currentRank}` : "";
+                        const badgeHtml = currentRank <= 3 
+                            ? `<div class="rank-number"><i class="fas fa-crown" style="margin-right:4px;"></i> NO.${currentRank}</div>` 
+                            : `<div class="rank-number" style="background:rgba(255,255,255,0.1);">NO.${currentRank}</div>`;
+                        
+                        const avatarUrl = photoMap[p.name] || defaultAvatar;
+
+                        grid.innerHTML += `
+                            <div class="rank-card ${rankClass}">
+                                ${badgeHtml}
+                                <img src="${avatarUrl}" class="avatar-circle" loading="lazy" alt="${p.name}">
+                                <div class="rank-info">
+                                    <h3>${p.name}</h3>
+                                    <p>${p.team || "自由球員"} | ${p.area || "未分區"}</p>
+                                </div>
+                                <div class="rank-score">
+                                    ${p.totalPts}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
             }
         } catch(e) {
-            tbody.innerHTML = "<tr><td colspan='5'>無法載入積分，請確認本月裁判已執行統計。</td></tr>";
+            console.error(e);
+            grid.innerHTML = "<div class='card' style='grid-column: 1 / -1; text-align:center; color:red;'>無法載入積分，請確認本月裁判是否執行統計。</div>";
         }
     },
 

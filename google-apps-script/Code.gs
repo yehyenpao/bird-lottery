@@ -10,6 +10,7 @@ const CONFIG = {
   SHEET_ELIMINATION: "單淘汰追分賽",
   SHEET_POINTS: "積點統計表",
   SHEET_SPECIAL: "特殊紀錄",
+  SHEET_PLAYER_DB: "球員資料庫",
   TEAMS: ["藍鳥隊", "黑鳥隊", "青鳥隊", "粉鳥隊"],
   AREAS: ["猛禽區", "小鳥區", "鳥蛋區"],
   TIMEZONE: "GMT+8"
@@ -94,6 +95,12 @@ function handleRequest(e) {
       case "saveSpecialRecords":
         result = logicSaveSpecialRecords(yearMonth, data);
         break;
+      case "getPlayersInfo":
+        result = { status: "success", data: logicGetPlayersInfo() };
+        break;
+      case "uploadPhoto":
+        result = logicUploadPhoto(data);
+        break;
     }
     
     return createResponse(result);
@@ -116,12 +123,16 @@ function helperGetData(sheetName, yearMonth) {
   if (!sheet) return [];
   
   const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+
   const headers = data[0];
+  const ymIdx = headers.indexOf("年月");
+  const timeIdx = headers.indexOf("比賽時間");
   const result = [];
   
   for (let i = 1; i < data.length; i++) {
-    // 處理第一欄 (年月)
-    let rYM = data[i][0];
+    // 處理「年月」欄位
+    let rYM = ymIdx > -1 ? data[i][ymIdx] : "";
     if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
     
     if (!yearMonth || String(rYM).trim() === String(yearMonth).trim()) {
@@ -129,8 +140,8 @@ function helperGetData(sheetName, yearMonth) {
       headers.forEach((h, idx) => {
         let val = data[i][idx];
         
-        // 處理第二欄 (比賽時間)：如果是 Date 物件，轉為 HH:mm 臺北時間
-        if (idx === 1 && val instanceof Date) {
+        // 處理「比賽時間」欄位：轉為 HH:mm 格式
+        if (idx === timeIdx && val instanceof Date) {
           val = Utilities.formatDate(val, CONFIG.TIMEZONE, "HH:mm");
         }
         
@@ -160,6 +171,11 @@ function logicAddRegistrations(dataList) {
       "", "", "", ""
     ]);
   });
+  
+  // 同步球員資料庫
+  const names = dataList.map(d => d.name);
+  if (names.length > 0) syncPlayerDatabase(names);
+
   return { status: "success", message: "成功報名 " + dataList.length + " 筆資料" };
 }
 
@@ -184,7 +200,7 @@ function logicGenerateSchedule(yearMonth) {
   }
   
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["年月", "比賽時間", "序號", "輪次", "區", "場地", "A隊名", "A隊員1", "A隊員2", "A隊比分", "B隊比分", "B隊名", "B隊員1", "B隊員2", "裁判", "比賽狀態"]);
+    sheet.appendRow(["序號", "年月", "比賽時間", "輪次", "區", "場地", "A隊名", "A隊員1", "A隊員2", "A隊比分", "B隊比分", "B隊名", "B隊員1", "B隊員2", "裁判", "比賽狀態"]);
   }
   
   const matchups = [[0, 2], [1, 3], [0, 1], [2, 3], [0, 3], [2, 1]];
@@ -220,7 +236,7 @@ function logicGenerateSchedule(yearMonth) {
       const memberB2 = playersB[1] ? playersB[1].姓名 : "待定";
       
       sheet.appendRow([
-        yearMonth, matchTime, sequenceNum++, roundLabel, area, court, 
+        sequenceNum++, yearMonth, matchTime, roundLabel, area, court, 
         teamA, memberA1, memberA2, 0, 
         0, teamB, memberB1, memberB2, "", "待賽"
       ]);
@@ -239,11 +255,12 @@ function logicUpdateScore(d) {
   const rows = sheet.getDataRange().getValues();
   
   for (let i = 1; i < rows.length; i++) {
-    let rYM = rows[i][0];
+    let rYM = rows[i][1]; // 年月移動到第 2 欄 (Index 1)
     if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
     
+    // 輪次 (Index 3), 場地 (Index 5)
     if (String(rYM) === String(d.yearMonth) && rows[i][3] == d.round && rows[i][5] == d.court) {
-      if (d.startTime) sheet.getRange(i + 1, 2).setValue(d.startTime); // 回寫實際開賽時間
+      if (d.startTime) sheet.getRange(i + 1, 3).setValue(d.startTime); // 比賽時間移動到第 3 欄 (Index 2)
       sheet.getRange(i + 1, 10).setValue(d.scoreA);
       sheet.getRange(i + 1, 11).setValue(d.scoreB);
       if (d.referee !== undefined) sheet.getRange(i + 1, 15).setValue(d.referee);
@@ -940,4 +957,103 @@ function logicSaveSpecialRecords(yearMonth, data) {
   if (data.cName) sheet.appendRow([yearMonth, "追分王", data.cName, data.cNote || ""]);
 
   return { status: "success", message: "特殊紀錄已成功發布！" };
+}
+
+/**
+ * 同步球員到獨立的球員資料庫中
+ */
+function syncPlayerDatabase(names) {
+  if (!names || names.length === 0) return;
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(CONFIG.SHEET_PLAYER_DB);
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.SHEET_PLAYER_DB);
+    sheet.appendRow(["姓名", "照片網址"]);
+  }
+
+  const data = sheet.getDataRange().getValues();
+  const existingNames = new Set();
+  
+  for (let i = 1; i < data.length; i++) {
+    const n = String(data[i][0]).trim();
+    if (n) existingNames.add(n);
+  }
+
+  const newNames = [...new Set(names)].filter(n => !existingNames.has(String(n).trim()));
+  newNames.forEach(n => {
+    sheet.appendRow([n.trim(), ""]);
+  });
+}
+
+/**
+ * 獲取球員名單與照片對應圖
+ */
+function logicGetPlayersInfo() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(CONFIG.SHEET_PLAYER_DB);
+  if (!sheet) return {};
+
+  const data = sheet.getDataRange().getValues();
+  const playerMap = {};
+  for (let i = 1; i < data.length; i++) {
+    const n = String(data[i][0]).trim();
+    const photoUrl = String(data[i][1]).trim();
+    if (n) playerMap[n] = photoUrl;
+  }
+  return playerMap;
+}
+
+/**
+ * 上傳球員照片 (Base64) 至 Google Drive
+ */
+function logicUploadPhoto(data) {
+  const { name, base64Data, mimeType } = data;
+  if (!name || !base64Data) {
+    return { status: "error", message: "缺少必要參數 (姓名或圖片資料)" };
+  }
+
+  // 1. 尋找或建立統一照片資料夾
+  const folderName = "羽球系統照片";
+  let uploadFolder;
+  const folders = DriveApp.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    uploadFolder = folders.next();
+  } else {
+    uploadFolder = DriveApp.createFolder(folderName);
+    // 注意：在此 GAS 架構下，建立後需管理員手動調整為「知道連結的人均可檢視」
+  }
+
+  // 2. 將 base64 解碼並轉成 Blob
+  const byteString = Utilities.base64Decode(base64Data.split(',')[1] || base64Data);
+  const blob = Utilities.newBlob(byteString, mimeType || "image/jpeg", `${name}_大頭貼.jpg`);
+
+  // 3. 建立檔案並組成分享網址
+  const file = uploadFolder.createFile(blob);
+  const fileId = file.getId();
+  const photoUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+
+  // 4. 更新球員資料庫
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(CONFIG.SHEET_PLAYER_DB);
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.SHEET_PLAYER_DB);
+    sheet.appendRow(["姓名", "照片網址"]);
+  }
+
+  const rows = sheet.getDataRange().getValues();
+  let found = false;
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]).trim() === String(name).trim()) {
+      sheet.getRange(i + 1, 2).setValue(photoUrl);
+      found = true;
+      break;
+    }
+  }
+
+  // 若沒發現這名球員，則新增一行
+  if (!found) {
+    sheet.appendRow([name.trim(), photoUrl]);
+  }
+
+  return { status: "success", message: "照片上傳成功！", photoUrl: photoUrl };
 }

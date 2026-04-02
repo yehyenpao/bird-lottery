@@ -92,6 +92,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (defaultNav) {
         defaultNav.click();
     }
+    
+    // 初始化相片上傳 UI
+    if (typeof Photo !== "undefined") Photo.init();
 });
 
 function loadTabData(tabId) {
@@ -127,6 +130,9 @@ function loadTabData(tabId) {
             break;
         case "special":
             if (typeof Special !== "undefined") Special.init();
+            break;
+        case "photo-upload":
+            if (typeof Photo !== "undefined") Photo.loadPlayers();
             break;
             
         // Shared Tabs

@@ -54,6 +54,7 @@
                 <li data-tab="finals"><i class="fas fa-trophy"></i> 冠軍/季軍</li>
                 <li data-tab="points"><i class="fas fa-coins"></i> 積點系統</li>
                 <li data-tab="special"><i class="fas fa-star"></i> 特殊紀錄</li>
+                <li data-tab="photo-upload"><i class="fas fa-id-badge"></i> 上傳照片</li>
                 <li><a href="?role=viewer" target="_blank" style="color:inherit; text-decoration:none;"><i class="fas fa-external-link-alt"></i> 公告連結 (球友端)</a></li>
             </ul>
 
@@ -428,7 +429,6 @@
                         <input type="text" id="special-q-note" placeholder="備註 (選填，例如: 下次鳥樂賽 上猛禽區)" style="width:100%; padding: 0.8rem; background:rgba(0,0,0,0.2); border:1px solid var(--border); color:#ccc; border-radius:8px; margin-top:0.5rem; font-size:0.9rem;">
                     </div>
                     <div class="form-group" style="margin-bottom: 1rem; margin-top:2rem;">
-                        <label>鳥王姓名</label>
                         <input type="text" id="special-b-name" placeholder="例如: Kobe/阿俊" style="width:100%; padding: 0.8rem; background:rgba(0,0,0,0.2); border:1px solid var(--border); color:white; border-radius:8px; margin-top:0.5rem;">
                         <input type="text" id="special-b-note" placeholder="備註 (選填，例如: 下次鳥樂賽 上猛禽區)" style="width:100%; padding: 0.8rem; background:rgba(0,0,0,0.2); border:1px solid var(--border); color:#ccc; border-radius:8px; margin-top:0.5rem; font-size:0.9rem;">
                     </div>
@@ -446,33 +446,59 @@
                 </div>
             </section>
 
+            <!-- 裁判端: 分頁 12: 上傳照片 -->
+            <section id="tab-photo-upload" class="tab-content">
+                <div class="results-header">
+                    <h2><i class="fas fa-id-badge"></i> 12. 上傳球員照片</h2>
+                    <p class="hint">請挑選球員並上傳照片，系統將自動處理壓縮並存檔，供球友端呈現。</p>
+                </div>
+                <div class="card" style="max-width: 600px; margin: 0 auto; text-align: center;">
+                    <div class="form-group" style="margin-bottom: 1.5rem; text-align: left;">
+                        <label style="color: var(--primary); font-weight: bold; margin-bottom: 0.5rem; display: block;">請選擇球員</label>
+                        <select id="photo-player-select" style="width: 100%; padding: 0.8rem; border-radius: 8px; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border);">
+                            <option value="">載入中...</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <input type="file" id="photo-input" accept="image/*" style="display: none;">
+                        <label for="photo-input" class="btn btn-secondary" style="display: inline-block; cursor: pointer; padding: 1rem 2rem;">
+                            <i class="fas fa-camera"></i> 選擇圖片 (手機可拍照)
+                        </label>
+                    </div>
+
+                    <div id="photo-preview-container" style="margin-top: 1rem; display: none;">
+                        <img id="photo-preview" src="" alt="預覽" style="max-width: 200px; max-height: 200px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin-bottom: 1rem;">
+                        <div style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 1rem;">圖片將被自動壓縮優化</div>
+                    </div>
+
+                    <button id="btn-upload-photo" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem; display: none;" disabled>
+                        <i class="fas fa-cloud-upload-alt"></i> 確認上傳
+                    </button>
+                    <!-- 用於壓縮的隱藏 canvas -->
+                    <canvas id="photo-canvas" style="display: none;"></canvas>
+                </div>
+            </section>
+
             <!-- 球友端: 賽程查詢 -->
             <section id="tab-v-schedule" class="tab-content">
                 <div class="results-header">
-                    <h2><i class="fas fa-calendar-alt"></i> 賽程查詢</h2>
+                    <h2><i class="fas fa-calendar-alt"></i> 賽程與即時比分</h2>
+                    <p class="hint">可在此查看預賽與追分決賽的所有進度。</p>
                 </div>
-                <!-- 循環賽唯讀 -->
-                <div class="card">
-                    <h3 style="margin-bottom:1rem; color:var(--primary);">第一階段：循環賽</h3>
-                    <div class="table-container" style="overflow-x: auto;">
-                        <table id="v-schedule-table">
-                            <thead>
-                                <tr><th>時間</th><th>序號</th><th>輪/場</th><th>A隊</th><th>vs</th><th>B隊</th><th>狀態/裁判</th></tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                <!-- 循環賽卡片容器 -->
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="margin-bottom:1rem; color:var(--primary); border-left: 4px solid var(--primary); padding-left: 0.8rem;">第一階段：循環賽</h3>
+                    <div id="v-rr-list-container" class="team-grid">
+                        <!-- 由 JS 生成卡片 -->
                     </div>
                 </div>
-                <!-- 追分賽唯讀 -->
-                <div class="card mt-3">
-                    <h3 style="margin-bottom:1rem; color:var(--accent);">第二階段：追分賽與冠軍戰</h3>
-                    <div class="table-container" style="overflow-x: auto;">
-                        <table id="v-chasing-table">
-                            <thead>
-                                <tr><th>賽程進度</th><th>區</th><th>場地</th><th>A隊</th><th>vs</th><th>B隊</th><th>狀態</th></tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                
+                <!-- 追分賽卡片容器 -->
+                <div>
+                    <h3 style="margin-bottom:1rem; color:var(--accent); border-left: 4px solid var(--accent); padding-left: 0.8rem;">第二階段：追分賽與決賽</h3>
+                    <div id="v-chasing-list-container" class="team-grid">
+                        <!-- 由 JS 生成卡片 -->
                     </div>
                 </div>
             </section>
@@ -491,21 +517,17 @@
                 </div>
             </section>
 
-            <!-- 球友端: 積分排名 -->
+            <!-- 球友端: 積分排名 (改採卡片式) -->
             <section id="tab-v-points" class="tab-content">
                 <div class="results-header">
                     <h2><i class="fas fa-coins"></i> 積分排名與查詢</h2>
+                    <p class="hint">前 60 名球員大點將會顯示於此。排名前三將獲得黃金徽章！</p>
                 </div>
-                <div class="table-container" style="overflow-x: auto;">
-                    <table class="pivot-table">
-                        <thead>
-                            <tr>
-                                <th>排名</th><th>姓名</th><th>隊名</th><th>區</th><th>本月總結點</th>
-                            </tr>
-                        </thead>
-                        <tbody id="v-points-tbody">
-                        </tbody>
-                    </table>
+                <!-- 預留排版容器 -->
+                <div id="v-points-grid" class="points-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                    <div style="text-align:center; padding: 2rem; grid-column: 1 / -1;">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i><br>載入全體球員資料與頭像中...
+                    </div>
                 </div>
             </section>
 
@@ -546,6 +568,7 @@
     <script src="js/finals.js?v=5"></script>
     <script src="js/points.js?v=5"></script>
     <script src="js/special.js?v=5"></script>
+    <script src="js/photo.js?v=5"></script>
     <script src="js/viewer.js?v=5"></script>
     <script src="js/app.js?v=5"></script>
     <script>

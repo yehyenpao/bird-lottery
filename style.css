@@ -678,3 +678,106 @@ td {
     border-radius: 12px;
     font-weight: bold;
 }
+
+/* 額外動畫與組件樣式 */
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+}
+
+.status-live {
+    background: #ff4757;
+    color: white;
+    animation: pulse 1.5s infinite;
+}
+
+.match-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: default;
+}
+
+.match-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    border-color: var(--primary);
+}
+
+/* 積分排名專用小卡與頭像 */
+.rank-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 1px solid var(--border);
+    transition: transform 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.rank-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.rank-card .rank-number {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    padding: 0.3rem 1rem;
+    border-bottom-left-radius: 12px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.rank-card.rank-1 {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(30, 41, 59, 0.8));
+    border-color: #fbbf24;
+}
+.rank-card.rank-2 {
+    background: linear-gradient(135deg, rgba(148, 163, 184, 0.2), rgba(30, 41, 59, 0.8));
+    border-color: #94a3b8;
+}
+.rank-card.rank-3 {
+    background: linear-gradient(135deg, rgba(180, 83, 9, 0.2), rgba(30, 41, 59, 0.8));
+    border-color: #b45309;
+}
+
+.avatar-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255,255,255,0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    background-color: var(--bg-dark);
+}
+
+.rank-card.rank-1 .avatar-circle { border-color: #fbbf24; }
+.rank-card.rank-2 .avatar-circle { border-color: #94a3b8; }
+.rank-card.rank-3 .avatar-circle { border-color: #b45309; }
+
+.rank-info h3 {
+    margin: 0 0 0.4rem 0;
+    font-size: 1.3rem;
+    color: white;
+}
+.rank-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+}
+.rank-score {
+    margin-left: auto;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--primary);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.rank-card.rank-1 .rank-score { color: #fbbf24; }
+.rank-card.rank-2 .rank-score { color: #cbd5e1; }
+.rank-card.rank-3 .rank-score { color: #f59e0b; }

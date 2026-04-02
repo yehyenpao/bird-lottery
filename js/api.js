@@ -13,7 +13,22 @@ const API = {
         if (window.logDebug) window.logDebug(`[REQ] ${action}...`);
         
         try {
-            const response = await fetch(url, { method: "GET", redirect: "follow" });
+            let fetchOptions = { method: "GET", redirect: "follow" };
+            
+            // 若為上傳照片功能且有資料，改用 POST 以避免 URL 過長限制
+            if (action === 'uploadPhoto' && data) {
+                url = `${baseUrl}?action=${action}&yearMonth=${currentYM}`;
+                fetchOptions = {
+                    method: "POST",
+                    redirect: "follow",
+                    body: JSON.stringify({ data: data }),
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8"
+                    }
+                };
+            }
+
+            const response = await fetch(url, fetchOptions);
             const textData = await response.text();
             
             let result;
@@ -57,5 +72,7 @@ const API = {
     generateFinals() { return this.call("generateFinals"); },
     calculatePoints(manualData) { return this.call("calculatePoints", manualData); },
     getSpecialRecords() { return this.call("getSpecialRecords"); },
-    saveSpecialRecords(data) { return this.call("saveSpecialRecords", data); }
+    saveSpecialRecords(data) { return this.call("saveSpecialRecords", data); },
+    getPlayersInfo() { return this.call("getPlayersInfo"); },
+    uploadPhoto(data) { return this.call("uploadPhoto", data); }
 };

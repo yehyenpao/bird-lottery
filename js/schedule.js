@@ -41,6 +41,7 @@ const Schedule = {
             html += `
                 <tr>
                     <td>${this.formatTime(match.比賽時間)}</td>
+                    <td>${match.序號 || ""}</td>
                     <td>第 ${match.輪次} 輪</td>
                     <td><span class="badge" style="background:${CONFIG.AREA_COLORS[areaName] || '#666'}">${areaName}</span></td>
                     <td>場地 ${match.場地}</td>
