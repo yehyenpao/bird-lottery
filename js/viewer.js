@@ -216,7 +216,7 @@ const Viewer = {
             if (ptsRes && ptsRes.data) {
                 grid.innerHTML = "";
                 const photoMap = (infoRes && infoRes.status === "success") ? infoRes.data : {};
-                const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>";
+                const defaultAvatar = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzY0NzQ4YiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
 
                 // 取前 60 名
                 const topPlayers = ptsRes.data.slice(0, 60);
@@ -240,7 +240,13 @@ const Viewer = {
                             ? `<div class="rank-number"><i class="fas fa-crown" style="margin-right:4px;"></i> NO.${currentRank}</div>` 
                             : `<div class="rank-number" style="background:rgba(255,255,255,0.1);">NO.${currentRank}</div>`;
                         
-                        const avatarUrl = photoMap[p.name] || defaultAvatar;
+                        let avatarUrl = photoMap[p.name] || defaultAvatar;
+
+                        // 修正 iOS Safari / 跨站 Cookie 阻擋 Google Drive 圖片的問題
+                        if (avatarUrl.includes("drive.google.com/uc?export=view&id=")) {
+                            const fileId = avatarUrl.split("id=")[1];
+                            avatarUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w500`;
+                        }
 
                         grid.innerHTML += `
                             <div class="rank-card ${rankClass}">
