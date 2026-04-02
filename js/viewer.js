@@ -201,15 +201,22 @@ const Viewer = {
     async loadPoints() {
         const grid = document.getElementById("v-points-grid");
         if (!grid) return;
-        grid.innerHTML = "<div style='text-align:center; padding: 2rem; grid-column: 1 / -1;'><i class='fas fa-spinner fa-spin fa-2x'></i><br>載入全體球員資料與頭像中...</div>";
+        
+        // 使用 Skeleton Loading 佔位符
+        grid.innerHTML = Array(6).fill(0).map(() => `
+            <div class="rank-card" style="opacity: 0.3; filter: grayscale(1);">
+                <div class="avatar-circle" style="background: #334155;"></div>
+                <div class="rank-info">
+                    <div style="height: 20px; width: 100px; background: #334155; border-radius: 4px; margin-bottom: 8px;"></div>
+                    <div style="height: 14px; width: 150px; background: #334155; border-radius: 4px;"></div>
+                </div>
+            </div>
+        `).join("");
         
         try {
-            const currentYM = document.getElementById("current-year-month").innerText.trim();
-            const ptsUrl = `${CONFIG.API_URL}?action=calculatePoints&yearMonth=${currentYM}&data=%7B%7D`; 
-            
-            // 並發請求：抓取本期積分、與球員照片 Mapping
+            // 並發請求：抓取本期存檔積分、與球員照片 Mapping (改用 getPointsRecords，不重新計算，速度極快)
             const [ptsRes, infoRes] = await Promise.all([
-                fetch(ptsUrl).then(r=>r.json()),
+                API.getPointsRecords(),
                 API.getPlayersInfo()
             ]);
 
@@ -218,55 +225,65 @@ const Viewer = {
                 const photoMap = (infoRes && infoRes.status === "success") ? infoRes.data : {};
                 const defaultAvatar = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzY0NzQ4YiI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
 
-                // 取前 60 名
                 const topPlayers = ptsRes.data.slice(0, 60);
-
-                let currentRank = 1;
-                let previousScore = -1;
-                let actualRankIdx = 0;
-
                 if (topPlayers.length === 0) {
-                    grid.innerHTML = "<div class='card' style='grid-column: 1 / -1; text-align:center;'>無積分資料</div>";
-                } else {
-                    topPlayers.forEach((p) => {
-                        actualRankIdx++;
-                        if (p.totalPts !== previousScore) {
-                            currentRank = actualRankIdx;
-                            previousScore = p.totalPts;
-                        }
+                    grid.innerHTML = "<div class='card' style='grid-column: 1 / -1; text-align:center;'>尚未執行月結統計，目前暫無資料</div>";
+                    return;
+                }
 
-                        const rankClass = currentRank <= 3 ? `rank-${currentRank}` : "";
-                        const badgeHtml = currentRank <= 3 
-                            ? `<div class="rank-number"><i class="fas fa-crown" style="margin-right:4px;"></i> NO.${currentRank}</div>` 
-                            : `<div class="rank-number" style="background:rgba(255,255,255,0.1);">NO.${currentRank}</div>`;
+                // 效能優化：分批渲染 (Batch Rendering)
+                const BATCH_SIZE = 15;
+                let renderedCount = 0;
+
+                const renderBatch = () => {
+                    const nextBatch = topPlayers.slice(renderedCount, renderedCount + BATCH_SIZE);
+                    let htmlList = "";
+                    
+                    nextBatch.forEach((p, index) => {
+                        const actualIdx = renderedCount + index;
+                        const rankNum = actualIdx + 1; // 簡化排名邏輯，加速渲染
+                        
+                        const rankClass = rankNum <= 3 ? `rank-${rankNum}` : "";
+                        const badgeHtml = rankNum <= 3 
+                            ? `<div class="rank-number"><i class="fas fa-crown" style="margin-right:4px;"></i> NO.${rankNum}</div>` 
+                            : `<div class="rank-number" style="background:rgba(255,255,255,0.1);">NO.${rankNum}</div>`;
                         
                         let avatarUrl = photoMap[p.name] || defaultAvatar;
-
-                        // 修正 iOS Safari / 跨站 Cookie 阻擋 Google Drive 圖片的問題
                         if (avatarUrl.includes("drive.google.com/uc?export=view&id=")) {
                             const fileId = avatarUrl.split("id=")[1];
                             avatarUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w500`;
                         }
 
-                        grid.innerHTML += `
-                            <div class="rank-card ${rankClass}">
+                        htmlList += `
+                            <div class="rank-card ${rankClass} animate-fadeIn">
                                 ${badgeHtml}
                                 <img src="${avatarUrl}" class="avatar-circle" loading="lazy" alt="${p.name}">
                                 <div class="rank-info">
                                     <h3>${p.name}</h3>
                                     <p>${p.team || "自由球員"} | ${p.area || "未分區"}</p>
                                 </div>
-                                <div class="rank-score">
-                                    ${p.totalPts}
-                                </div>
+                                <div class="rank-score">${p.totalPts}</div>
                             </div>
                         `;
                     });
-                }
+
+                    const tempDiv = document.createElement("div");
+                    tempDiv.innerHTML = htmlList;
+                    while (tempDiv.firstChild) {
+                        grid.appendChild(tempDiv.firstChild);
+                    }
+
+                    renderedCount += BATCH_SIZE;
+                    if (renderedCount < topPlayers.length) {
+                        requestAnimationFrame(renderBatch); // 讓瀏覽器在下一幀空檔繼續畫
+                    }
+                };
+
+                renderBatch();
             }
         } catch(e) {
             console.error(e);
-            grid.innerHTML = "<div class='card' style='grid-column: 1 / -1; text-align:center; color:red;'>無法載入積分，請確認本月裁判是否執行統計。</div>";
+            grid.innerHTML = "<div class='card' style='grid-column: 1 / -1; text-align:center; color:red;'>讀取失敗，請稍後再試</div>";
         }
     },
 

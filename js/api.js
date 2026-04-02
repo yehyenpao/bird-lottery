@@ -71,6 +71,7 @@ const API = {
     generateChasingSchedule() { return this.call("generateChasingSchedule"); },
     generateFinals() { return this.call("generateFinals"); },
     calculatePoints(manualData) { return this.call("calculatePoints", manualData); },
+    getPointsRecords() { return this.call("getPointsRecords"); },
     getSpecialRecords() { return this.call("getSpecialRecords"); },
     saveSpecialRecords(data) { return this.call("saveSpecialRecords", data); },
     getPlayersInfo() { return this.call("getPlayersInfo"); },

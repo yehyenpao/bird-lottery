@@ -87,7 +87,10 @@ function handleRequest(e) {
         result = logicClearData(yearMonth, e.parameter.sheet);
         break;
       case "calculatePoints":
-        result = logicCalculatePoints(yearMonth, data);
+        result = { status: "success", data: logicCalculatePoints(yearMonth, data) };
+        break;
+      case "getPointsRecords":
+        result = { status: "success", data: helperGetPointsRecords(yearMonth) };
         break;
       case "getSpecialRecords":
         result = { status: "success", data: helperGetSpecialRecords() };
@@ -879,8 +882,9 @@ function logicCalculatePoints(yearMonth, manualData) {
     ]);
   }
   
-  finalArray.forEach((p, idx) => {
-    pSheet.appendRow([
+  // 核心效能優化：改為 2D 陣列批次寫入 (setValues) 而不是一個一個 appendRow
+  if (finalArray.length > 0) {
+    const rowsToAppend = finalArray.map((p, idx) => [
       yearMonth, 
       idx + 1,        
       p.name, 
@@ -895,13 +899,51 @@ function logicCalculatePoints(yearMonth, manualData) {
       p.elimPts,
       p.totalPts
     ]);
-  });
+    
+    pSheet.getRange(pSheet.getLastRow() + 1, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
+  }
   
   return { 
     status: "success", 
     message: "月結積點計算完成，共統計 " + finalArray.length + " 位球員！", 
     data: finalArray 
   };
+}
+
+/**
+ * 取得前台顯示專用的積點紀錄 (純讀取，不計算，效能優化)
+ */
+function helperGetPointsRecords(yearMonth) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(CONFIG.SHEET_POINTS);
+  if (!sheet) return [];
+  
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+  
+  const result = [];
+  const headers = data[0];
+  
+  // 找到對應月分且依照排名排序 (Excel 裡已經排好了)
+  for (let i = 1; i < data.length; i++) {
+    let rYM = data[i][0];
+    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
+    
+    if (String(rYM) === String(yearMonth)) {
+      const obj = {};
+      headers.forEach((h, idx) => {
+        obj[h] = data[i][idx];
+      });
+      // 為維持與 calculatePoints 回傳格式一致
+      result.push({
+        name: obj["姓名"],
+        team: obj["隊名"],
+        area: obj["區"],
+        totalPts: obj["累積積點"]
+      });
+    }
+  }
+  return result;
 }
 
 /**
