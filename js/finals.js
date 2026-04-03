@@ -1,49 +1,213 @@
 const Finals = {
+    registrations: [],
+    winners: [],
+    losers: [],
+    lineups: {
+        champ: [],  // 冠軍賽
+        third: []   // 季軍賽
+    },
+
     async load() {
-        if (window.logDebug) window.logDebug("[FINALS] 正在載入決賽賽程...");
+        const chasingRes = await API.getChasingSchedule();
+        const regRes = await API.getRegistrations();
         
-        try {
-            const res = await API.getChasingSchedule();
-            if (res && res.status === "success") {
-                const data = res.data || [];
-                // 僅顯示區欄位包含 "冠軍賽" 或 "季軍賽" 的紀錄
-                const finalsData = data.filter(m => {
-                    const area = String(m.區 || m["區"] || "");
-                    return area.includes("冠軍賽") || area.includes("季軍賽");
-                });
-                
-                if (window.logDebug) window.logDebug(`[FINALS] 抓取決賽/季軍賽: ${finalsData.length} 筆`);
-                this.renderTable(finalsData);
+        if (chasingRes && chasingRes.status === "success" && regRes && regRes.status === "success") {
+            const data = chasingRes.data || [];
+            this.registrations = regRes.data || [];
+
+            // 1. 顯示現有決賽表
+            const finalsData = data.filter(m => (String(m["區"]).includes("冠軍賽") || String(m["區"]).includes("季軍賽")));
+            this.renderTable(finalsData);
+
+            // 2. 判定準決賽勝負以建構編輯器
+            // 找出準決賽的最終分進度 (通常是 66分)
+            const semiFinals = data.filter(i => {
+                const area = String(i["區"] || "");
+                const status = String(i["比賽狀態"] || "");
+                // 為了保險，搜尋該區最後一場 (比分最高的一場)
+                return area.includes("準決賽") && status === "已完賽";
+            });
+
+            // 根據區群組化，並找出最高分的場次
+            const groups = {};
+            semiFinals.forEach(m => {
+                if (!groups[m["區"]]) groups[m["區"]] = m;
+                const scoreM = (parseInt(m["A隊比分"]) || 0) + (parseInt(m["B隊比分"]) || 0);
+                const scoreG = (parseInt(groups[m["區"]]["A隊比分"]) || 0) + (parseInt(groups[m["區"]]["B隊比分"]) || 0);
+                if (scoreM > scoreG) groups[m["區"]] = m;
+            });
+
+            const finalSemiResults = Object.values(groups);
+
+            if (finalSemiResults.length < 2) {
+                document.getElementById("finals-lineup-editor").innerHTML = `
+                    <div class="card" style="text-align:center; color:var(--text-dim); padding:2rem;">
+                        <i class="fas fa-clock"></i> 準決賽尚未全數完賽 (需有兩組完賽紀錄)，無法自動帶入對戰名單。
+                    </div>
+                `;
+                return;
             }
-        } catch (err) {
-            console.error(err);
+
+            this.winners = [];
+            this.losers = [];
+            finalSemiResults.forEach(m => {
+                const sA = parseInt(m["A隊比分"]) || 0;
+                const sB = parseInt(m["B隊比分"]) || 0;
+                if (sA > sB) {
+                    this.winners.push(m["A隊名"]);
+                    this.losers.push(m["B隊名"]);
+                } else {
+                    this.winners.push(m["B隊名"]);
+                    this.losers.push(m["A隊名"]);
+                }
+            });
+
+            if (this.lineups.champ.length === 0) {
+                this.initDefaultLineups();
+            }
+            this.renderLineupEditor();
         }
 
         // 綁定生成按鈕
         const btnGen = document.getElementById("btn-generate-finals");
-        if (btnGen) {
-            btnGen.onclick = () => this.generateFinals();
+        if (btnGen) btnGen.onclick = () => this.generateFinalsSchedule();
+    },
+
+    initDefaultLineups() {
+        const defaults = [11, 22, 33, 44, 55, 66].map(s => ({
+            targetScore: s + "分接力",
+            A1: "", A2: "", A3: "",
+            B1: "", B2: "", B3: ""
+        }));
+        this.lineups.champ = JSON.parse(JSON.stringify(defaults));
+        this.lineups.third = JSON.parse(JSON.stringify(defaults));
+    },
+
+    renderLineupEditor() {
+        const container = document.getElementById("finals-lineup-editor");
+        if (!container) return;
+
+        const matchChamp = { teamA: this.winners[0], teamB: this.winners[1], court: "C", area: "冠軍賽", id: "champ" };
+        const matchThird = { teamA: this.losers[0], teamB: this.losers[1], court: "B", area: "季軍賽", id: "third" };
+
+        container.innerHTML = `
+            ${this.buildMatchEditor(matchChamp)}
+            ${this.buildMatchEditor(matchThird)}
+        `;
+    },
+
+    buildMatchEditor(m) {
+        const playersA = this.registrations.filter(r => r["隊名"] === m.teamA);
+        const playersB = this.registrations.filter(r => r["隊名"] === m.teamB);
+
+        const rows = this.lineups[m.id].map((row, idx) => `
+            <tr>
+                <td><input type="text" class="score-input" value="${row.targetScore}" onchange="Finals.updateRow('${m.id}', ${idx}, 'targetScore', this.value)"></td>
+                <td>${this.buildPlayerSelect(playersA, row.A1, (val) => Finals.updateRow(m.id, idx, 'A1', val))}</td>
+                <td>${this.buildPlayerSelect(playersA, row.A2, (val) => Finals.updateRow(m.id, idx, 'A2', val))}</td>
+                <td>${this.buildPlayerSelect(playersA, row.A3, (val) => Finals.updateRow(m.id, idx, 'A3', val))}</td>
+                <td style="color:var(--primary); font-weight:bold;">VS</td>
+                <td>${this.buildPlayerSelect(playersB, row.B1, (val) => Finals.updateRow(m.id, idx, 'B1', val))}</td>
+                <td>${this.buildPlayerSelect(playersB, row.B2, (val) => Finals.updateRow(m.id, idx, 'B2', val))}</td>
+                <td>${this.buildPlayerSelect(playersB, row.B3, (val) => Finals.updateRow(m.id, idx, 'B3', val))}</td>
+            </tr>
+        `).join("");
+
+        return `
+            <div class="match-setup-card animate-fadeIn">
+                <h3 style="color:#ffd700;"><i class="fas fa-trophy"></i> ${m.area}: ${m.teamA} vs ${m.teamB} (場地: ${m.court})</h3>
+                <div class="table-container">
+                    <table class="lineup-table">
+                        <thead>
+                            <tr>
+                                <th>目標分</th>
+                                <th>A隊員1</th>
+                                <th>A隊員2</th>
+                                <th>A隊員3</th>
+                                <th></th>
+                                <th>B隊員1</th>
+                                <th>B隊員2</th>
+                                <th>B隊員3</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <div class="lineup-actions">
+                    <button class="btn-add-round" onclick="Finals.addRound('${m.id}')"><i class="fas fa-plus"></i> 新增一輪</button>
+                    <button class="btn-remove-round" onclick="Finals.removeRound('${m.id}')"><i class="fas fa-minus"></i> 刪除最後一輪</button>
+                </div>
+            </div>
+        `;
+    },
+
+    buildPlayerSelect(players, current, onChange) {
+        const id = 'fsel-' + Math.random().toString(36).substr(2, 9);
+        setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.onchange = (e) => onChange(e.target.value);
+        }, 0);
+
+        let options = `<option value="">--選擇--</option>`;
+        players.forEach(p => {
+            options += `<option value="${p["姓名"]}" ${p["姓名"] === current ? 'selected' : ''}>${p["姓名"]}</option>`;
+        });
+        return `<select id="${id}">${options}</select>`;
+    },
+
+    updateRow(id, idx, field, val) {
+        this.lineups[id][idx][field] = val;
+    },
+
+    addRound(id) {
+        this.lineups[id].push({ targetScore: "分接力", A1: "", A2: "", A3: "", B1: "", B2: "", B3: "" });
+        this.renderLineupEditor();
+    },
+
+    removeRound(id) {
+        if (this.lineups[id].length > 1) {
+            this.lineups[id].pop();
+            this.renderLineupEditor();
         }
     },
 
-    async generateFinals() {
-        if (!confirm("確定要依據目前準決賽 66 分比分結果，自動產生「冠軍賽」與「季軍賽」賽程嗎？\n(這會將新賽程追加寫入追分賽紀錄表)")) return;
+    async generateFinalsSchedule() {
+        const champData = this.lineups.champ.map(row => ({
+            ...row,
+            teamA: this.winners[0],
+            teamB: this.winners[1],
+            court: "C",
+            area: "冠軍賽"
+        }));
+        const thirdData = this.lineups.third.map(row => ({
+            ...row,
+            teamA: this.losers[0],
+            teamB: this.losers[1],
+            court: "B",
+            area: "季軍賽"
+        }));
+
+        const allData = [...champData, ...thirdData];
+
+        const invalid = allData.some(d => !d.A1 || !d.A2 || !d.B1 || !d.B2);
+        if (invalid) {
+            alert("請確保每一輪的隊員1與隊員2皆已填寫！");
+            return;
+        }
+
+        if (!confirm("確定要依據上述「出場順序表」產生「決賽」賽程嗎？\n(這會寫入追分賽紀錄表，若已存在該月決賽資料將被覆蓋)")) return;
 
         const btn = document.getElementById("btn-generate-finals");
         const originalText = btn.innerHTML;
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 正在判定準決賽勝負並生成中...`;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 正在傳送賽程資料...`;
         btn.disabled = true;
 
         try {
-            const res = await API.generateFinals();
+            const res = await API.generateFinals(allData);
             if (res && res.status === "success") {
-                alert("冠軍賽與季軍賽程已成功產生！");
-                this.load(); // 重新整理畫面
-            } else {
-                alert("生成失敗: " + (res.message || "準決賽可能尚未全部結束"));
+                alert("決賽賽程已成功產生！");
+                this.load();
             }
-        } catch (err) {
-            alert("伺服器連線出錯");
         } finally {
             btn.innerHTML = originalText;
             btn.disabled = false;
@@ -53,25 +217,20 @@ const Finals = {
     renderTable(data) {
         const container = document.getElementById("finals-schedule-container");
         if (data.length === 0) {
-            container.innerHTML = `
-                <div class="card" style="text-align: center; color: var(--text-dim); padding: 3rem; background: rgba(255,255,255,0.02); border: 1px dashed #444;">
-                    <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 1rem; color: #ffd700;"></i>
-                    <p>目前尚無決賽資料。請在分頁 8 錄完所有「準決賽 66 分」數據後，點擊上方按鈕產生。</p>
-                </div>
-            `;
+            container.innerHTML = `<div class="card" style="text-align: center; color: var(--text-dim); padding: 2rem;">目前尚無決賽賽程。</div>`;
             return;
         }
 
         let html = `
-            <table class="pivot-table animate-fadeIn">
-                <thead style="background: linear-gradient(to bottom, #444, #222);">
+            <table class="pivot-table">
+                <thead>
                     <tr>
-                        <th style="width: 130px;">接力進度</th>
+                        <th style="width: 120px;">分</th>
                         <th>區/場地</th>
                         <th>A隊對戰</th>
                         <th>A隊員</th>
-                        <th style="width: 70px;">比分</th>
-                        <th style="width: 70px;">比分</th>
+                        <th style="width: 60px;">分</th>
+                        <th style="width: 60px;">分</th>
                         <th>B隊對戰</th>
                         <th>B隊員</th>
                         <th>狀態</th>
@@ -81,25 +240,22 @@ const Finals = {
         `;
 
         data.forEach(m => {
-            const isChampionship = String(m.區 || m["區"]).includes("冠軍賽");
-            const rowStyle = isChampionship ? "border-left: 4px solid gold; background: rgba(255, 215, 0, 0.03);" : "border-left: 4px solid #cd7f32; background: rgba(205, 127, 50, 0.03);";
-            const badgeColor = isChampionship ? "#ffd700" : "#cd7f32";
-            const isDone = m.比賽狀態 === "已完賽" || m.比賽狀態 === "已結束";
+            const isDone = m["比賽狀態"] === "已完賽";
+            const pA = [m["A隊員1"], m["A隊員2"], m["A隊員3"]].filter(p => p && p!=="待定").join(" / ");
+            const pB = [m["B隊員1"], m["B隊員2"], m["B隊員3"]].filter(p => p && p!=="待定").join(" / ");
+            const isChamp = String(m["區"]).includes("冠軍賽");
 
             html += `
-                <tr style="${rowStyle}" class="${isDone ? 'status-done' : ''}">
-                    <td><strong>${m.輪次}</strong><br/><small style="color: #888;">${m.比賽時間}</small></td>
-                    <td>
-                        <span class="badge" style="background: ${badgeColor}; color: #000; font-weight: bold; padding: 2px 8px;">${m.區}</span>
-                        <br/><span style="font-weight: bold; color: var(--primary);">${m.場地}場</span>
-                    </td>
-                    <td><strong style="color: #fff;">${m.A隊名}</strong></td>
-                    <td style="font-size: 0.85rem;">${m.A隊員1} / ${m.A隊員2}</td>
-                    <td style="font-size: 1.2rem; font-weight: bold; color: gold;">${m.A隊比分 || 0}</td>
-                    <td style="font-size: 1.2rem; font-weight: bold; color: gold;">${m.B隊比分 || 0}</td>
-                    <td><strong style="color: #fff;">${m.B隊名}</strong></td>
-                    <td style="font-size: 0.85rem;">${m.B隊員1} / ${m.B隊員2}</td>
-                    <td><span class="status-badge ${isDone ? 'status-done' : 'status-pending'}">${m.比賽狀態 || '待賽'}</span></td>
+                <tr style="${isChamp ? 'background:rgba(255,215,0,0.05); border-left:4px solid gold;' : 'border-left:4px solid #cd7f32;'}">
+                    <td><strong>${m["輪次"]}</strong></td>
+                    <td><span class="badge" style="background:${isChamp ? 'gold' : '#cd7f32'}; color:#000;">${m["區"]}</span><br/>${m["場地"]}場</td>
+                    <td><strong style="color:var(--primary);">${m["A隊名"]}</strong></td>
+                    <td style="font-size:0.85rem;">${pA}</td>
+                    <td style="font-size: 1.1rem; font-weight: bold;">${m["A隊比分"] || 0}</td>
+                    <td style="font-size: 1.1rem; font-weight: bold;">${m["B隊比分"] || 0}</td>
+                    <td><strong style="color:var(--accent);">${m["B隊名"]}</strong></td>
+                    <td style="font-size:0.85rem;">${pB}</td>
+                    <td><span class="status-badge ${isDone ? 'status-done' : 'status-pending'}">${m["比賽狀態"] || '待賽'}</span></td>
                 </tr>
             `;
         });
@@ -108,3 +264,4 @@ const Finals = {
         container.innerHTML = html;
     }
 };
+

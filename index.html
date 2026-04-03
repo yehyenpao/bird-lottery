@@ -239,34 +239,29 @@
                     </table>
                 </div>
                 
-                <!-- 追分賽棒次管理區 -->
-                <div id="relay-order-section" class="card mt-3 animate-fadeIn" style="display: none; background: rgba(0,0,0,0.2); border: 1px solid var(--border); padding: 1.5rem; border-radius: 16px;">
-                    <div class="card-header" style="margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
-                        <h3 style="color: var(--accent); margin-bottom: 0.5rem;"><i class="fas fa-running"></i> 第二階段：追分賽各隊棒次設定</h3>
-                        <p class="hint">請為各隊指定 1~6 棒順序 (1,2)→(2,3)→(3,4)→(4,5)→(5,6)→(6,1)。</p>
-                    </div>
-                    <div id="relay-order-container" class="relay-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem;">
-                        <!-- 隊員棒次表單由 JS 產生 -->
-                    </div>
-                    <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed rgba(255,255,255,0.1);">
-                        <button id="btn-save-relay" class="btn btn-primary btn-lg" style="padding: 1rem 3rem; font-size: 1.2rem; border-radius: 50px; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);">
-                            <i class="fas fa-save"></i> 儲存全員棒次並準備生成賽程
-                        </button>
-                    </div>
-                </div>
+                <!-- 舊版棒次管理區已移除，改由 Tab7/Tab9 直接設定 -->
             </section>
 
             <section id="tab-chasing" class="tab-content">
                 <div class="results-header">
-                    <h2><i class="fas fa-running"></i> 7. 第二階段：產生追分賽程</h2>
-                    <p class="hint">依據預賽排名自動分配：C場 (1vs4), B場 (2vs3)。</p>
+                    <h2><i class="fas fa-running"></i> 7. 第二階段：產生追分賽程 (準決賽 1v4, 2v3)</h2>
+                    <p class="hint">請先設定各場次的出場順序（支援 2對2 或 3對3、自訂換輪分數）。</p>
                 </div>
-                <div class="card" style="padding: 2rem; text-align: center; background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--primary); margin-bottom: 2rem;">
-                    <button id="btn-generate-chasing" class="btn btn-primary btn-lg">
-                        <i class="fas fa-magic"></i> 產生準決賽追分賽程
+
+                <!-- 自訂出場順序表區塊 -->
+                <div id="chasing-lineup-editor" class="lineup-editor-container">
+                    <!-- 由 JS 根據預賽排名產生兩組對戰的設定表格 -->
+                    <div style="text-align:center; padding:3rem; color:var(--text-dim);">
+                        <i class="fas fa-spinner fa-spin"></i> 正在計算預賽排名並載入名單...
+                    </div>
+                </div>
+
+                <div class="card" style="padding: 2rem; text-align: center; background: rgba(59, 130, 246, 0.05); border: 2px dashed var(--primary); border-radius: 20px; margin-bottom: 2rem; margin-top:2rem;">
+                    <button id="btn-generate-chasing" class="btn btn-primary btn-lg" style="padding: 1rem 3rem; font-size: 1.2rem; border-radius: 50px;">
+                        <i class="fas fa-magic"></i> 依據上方「出場順序表」產生賽程
                     </button>
-                    <p class="hint mt-2">點擊按鈕後，系統將依據預賽 1~4 名排名自動生成準決賽接力表。</p>
                 </div>
+                
                 <div id="chasing-schedule-container" class="table-container">
                     <!-- 生成後的賽程清單將顯示於此 -->
                 </div>
@@ -297,7 +292,7 @@
                             <div class="score-box" id="chg-score-box-a">
                                 <span class="team-label">TEAM A</span>
                                 <h4 id="chg-team-a-name">A隊</h4>
-                                <p id="chg-team-a-players">隊員1 / 隊員2</p>
+                                <p id="chg-team-a-players" style="font-size:0.9rem; margin-bottom:0.8rem;">隊員1 / 隊員2 / 隊員3</p>
                                 <div class="points" id="chg-score-a">0</div>
                                 <div class="controls">
                                     <button onclick="ChasingReferee.changeScore('A', 1)">+</button>
@@ -316,7 +311,7 @@
                             <div class="score-box" id="chg-score-box-b">
                                 <span class="team-label">TEAM B</span>
                                 <h4 id="chg-team-b-name">B隊</h4>
-                                <p id="chg-team-b-players">隊員1 / 隊員2</p>
+                                <p id="chg-team-b-players" style="font-size:0.9rem; margin-bottom:0.8rem;">隊員1 / 隊員2 / 隊員3</p>
                                 <div class="points" id="chg-score-b">0</div>
                                 <div class="controls">
                                     <button onclick="ChasingReferee.changeScore('B', 1)">+</button>
@@ -340,13 +335,21 @@
             <section id="tab-finals" class="tab-content">
                 <div class="results-header">
                     <h2><i class="fas fa-trophy"></i> 9. 第二階段：冠軍賽 / 季軍賽</h2>
-                    <p class="hint">依據準決賽 66 分接力的最終勝負自動配對。</p>
+                    <p class="hint">依據準決賽 66 分接力的最終勝負手動設定出場順序。</p>
                 </div>
-                <div class="card" style="padding: 2rem; text-align: center; background: rgba(255, 215, 0, 0.05); border: 2px dashed #ffd700; border-radius: 20px; margin-bottom: 2rem;">
+
+                <!-- 決賽自訂出場順序表區塊 -->
+                <div id="finals-lineup-editor" class="lineup-editor-container">
+                    <div style="text-align:center; padding:3rem; color:var(--text-dim);">
+                        <i class="fas fa-info-circle"></i> 請先確保準決賽已全數完賽，系統將自動帶入對戰名單。
+                    </div>
+                </div>
+
+                <div class="card" style="padding: 2rem; text-align: center; background: rgba(255, 215, 0, 0.05); border: 2px dashed #ffd700; border-radius: 20px; margin-bottom: 2rem; margin-top:2rem;">
                     <button id="btn-generate-finals" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #ffd700, #ffa500); color: #000; font-weight: bold; border: none; padding: 1rem 3rem; border-radius: 50px; box-shadow: 0 10px 20px rgba(255, 215, 0, 0.2);">
-                        <i class="fas fa-magic"></i> 產生冠軍賽 / 季軍賽賽程
+                        <i class="fas fa-magic"></i> 依據上方「出場順序表」產生決賽賽程
                     </button>
-                    <p class="hint mt-3">準決賽全數結束後點擊，系統將由 66 分紀錄判定勝負並寫入對決名單。</p>
+                    <p class="hint mt-3">點擊後，系統將由出場順序表內容寫入對決名單。</p>
                 </div>
                 <div id="finals-schedule-container" class="table-container">
                     <!-- 生成後的賽程清單將顯示於此 -->

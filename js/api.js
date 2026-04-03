@@ -15,8 +15,9 @@ const API = {
         try {
             let fetchOptions = { method: "GET", redirect: "follow" };
             
-            // 若為上傳照片功能且有資料，改用 POST 以避免 URL 過長限制
-            if (action === 'uploadPhoto' && data) {
+            // 若資料體積較大或為特定寫入動作，改用 POST
+            const postActions = ['uploadPhoto', 'generateChasingSchedule', 'generateFinals', 'calculatePoints', 'saveSpecialRecords'];
+            if (postActions.includes(action) && data) {
                 url = `${baseUrl}?action=${action}&yearMonth=${currentYM}`;
                 fetchOptions = {
                     method: "POST",
@@ -68,8 +69,8 @@ const API = {
     updateScore(scoreData) { return this.call("updateScore", scoreData); },
     updateChasingScore(scoreData) { return this.call("updateChasingScore", scoreData); },
     updatePlayerOrder(data) { return this.call("updatePlayerOrder", data); },
-    generateChasingSchedule() { return this.call("generateChasingSchedule"); },
-    generateFinals() { return this.call("generateFinals"); },
+    generateChasingSchedule(data) { return this.call("generateChasingSchedule", data); },
+    generateFinals(data) { return this.call("generateFinals", data); },
     calculatePoints(manualData) { return this.call("calculatePoints", manualData); },
     getPointsRecords() { return this.call("getPointsRecords"); },
     getSpecialRecords() { return this.call("getSpecialRecords"); },

@@ -781,3 +781,119 @@ td {
 .rank-card.rank-1 .rank-score { color: #fbbf24; }
 .rank-card.rank-2 .rank-score { color: #cbd5e1; }
 .rank-card.rank-3 .rank-score { color: #f59e0b; }
+
+/* 追分賽/決賽 出場順序表 樣式 */
+.lineup-editor-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.match-setup-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.match-setup-card h3 {
+    margin-bottom: 1rem;
+    color: var(--primary);
+    text-align: center;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.lineup-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.lineup-table th {
+    padding: 0.8rem;
+    text-align: center;
+    background: rgba(255,255,255,0.05);
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.lineup-table td {
+    padding: 0.5rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.lineup-table .score-input {
+    width: 60px;
+    background: #000;
+    border: 1px solid #444;
+    color: #fff;
+    text-align: center;
+    padding: 0.4rem;
+    border-radius: 4px;
+}
+
+.lineup-table select {
+    width: 100px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid #555;
+    color: #fff;
+    padding: 0.4rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.lineup-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.btn-add-round {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+    border: 1px solid #22c55e;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.btn-add-round:hover {
+    background: #22c55e;
+    color: white;
+}
+
+.btn-remove-round {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.btn-remove-round:hover {
+    background: #ef4444;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .lineup-table th, .lineup-table td {
+        padding: 0.3rem;
+    }
+    .lineup-table select {
+        width: 80px;
+        font-size: 0.75rem;
+    }
+}

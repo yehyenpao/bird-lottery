@@ -105,10 +105,14 @@ const ChasingReferee = {
         const relayInfo = match.輪次 || match["輪次"] || "接力賽";
         const pairingInfo = match.區 || match["區"] || "淘汰賽";
 
-        if (teamAName) teamAName.innerText = match.A隊名;
-        if (teamAPlayers) teamAPlayers.innerText = `${match.A隊員1} / ${match.A隊員2}`;
-        if (teamBName) teamBName.innerText = match.B隊名;
-        if (teamBPlayers) teamBPlayers.innerText = `${match.B隊員1} / ${match.B隊員2}`;
+        if (teamAName) teamAName.innerText = match["A隊名"];
+        const playersA = [match["A隊員1"], match["A隊員2"], match["A隊員3"]].filter(p => p && p !== "待定").join(" / ");
+        if (teamAPlayers) teamAPlayers.innerText = playersA;
+        
+        if (teamBName) teamBName.innerText = match["B隊名"];
+        const playersB = [match["B隊員1"], match["B隊員2"], match["B隊員3"]].filter(p => p && p !== "待定").join(" / ");
+        if (teamBPlayers) teamBPlayers.innerText = playersB;
+        
         if (actualStart) actualStart.innerText = `${pairingInfo} - ${relayInfo}`;
         
         this.updateScoreUI();

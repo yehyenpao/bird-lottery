@@ -78,10 +78,10 @@ function handleRequest(e) {
         result = logicUpdatePlayerOrder(data);
         break;
       case "generateChasingSchedule":
-        result = logicGenerateChasingSchedule(yearMonth);
+        result = logicGenerateChasingSchedule(yearMonth, data);
         break;
       case "generateFinals":
-        result = logicGenerateFinals(yearMonth);
+        result = logicGenerateFinals(yearMonth, data);
         break;
       case "clearData":
         result = logicClearData(yearMonth, e.parameter.sheet);
@@ -426,71 +426,89 @@ function logicUpdatePlayerOrder(dataList) {
 }
 
 /**
- * 產生追分賽程 (準決賽 1v4, 2v3)
+ * 確保追分賽具備 第三隊員 的欄位，此函式確保欄位在寫入前存在。
  */
-function logicGenerateChasingSchedule(yearMonth) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const ranks = helperGetTeamRankings(yearMonth);
-  if (ranks.length < 4) return { status: "error", message: "預賽排名不足 4 隊" };
-
-  const regItems = helperGetData(CONFIG.SHEET_REGISTRATION, yearMonth);
-  let sheet = ss.getSheetByName(CONFIG.SHEET_CHASING);
-  if (!sheet) {
-    sheet = ss.insertSheet(CONFIG.SHEET_CHASING);
+function ensureChasingHeaders(sheet) {
+  let headers = sheet.getDataRange().getValues()[0] || [];
+  if (headers.length === 0) {
+    sheet.appendRow(["年月", "比賽時間", "輪次", "區", "場地", "A隊名", "A隊員1", "A隊員2", "A隊員3", "A隊比分", "B隊比分", "B隊名", "B隊員1", "B隊員2", "B隊員3", "裁判", "比賽狀態"]);
+    return sheet.getDataRange().getValues()[0];
   }
   
-  // 清除舊的該月資料
+  if (!headers.includes("A隊員3")) {
+    const idxA2 = headers.indexOf("A隊員2");
+    if (idxA2 !== -1) {
+      sheet.insertColumnAfter(idxA2 + 1);
+      sheet.getRange(1, idxA2 + 2).setValue("A隊員3");
+    }
+    // refresh
+    headers = sheet.getDataRange().getValues()[0];
+    const idxB2 = headers.indexOf("B隊員2");
+    if (idxB2 !== -1) {
+      sheet.insertColumnAfter(idxB2 + 1);
+      sheet.getRange(1, idxB2 + 2).setValue("B隊員3");
+    }
+    headers = sheet.getDataRange().getValues()[0];
+  }
+  return headers;
+}
+
+/**
+ * 產生追分賽程 (準決賽)，接收前端自訂出戰順序表
+ */
+function logicGenerateChasingSchedule(yearMonth, customizedData) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!customizedData || customizedData.length === 0) return { status: "error", message: "沒有接收到自訂賽程資料" };
+
+  let sheet = ss.getSheetByName(CONFIG.SHEET_CHASING);
+  if (!sheet) sheet = ss.insertSheet(CONFIG.SHEET_CHASING);
+  
+  const headers = ensureChasingHeaders(sheet);
+  
+  // 清除舊的該月準決賽資料
   const oldData = sheet.getDataRange().getValues();
   for (let i = oldData.length - 1; i >= 1; i--) {
      let rYM = oldData[i][0];
      if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
-     if (String(rYM) === String(yearMonth)) sheet.deleteRow(i + 1);
+     if (String(rYM) === String(yearMonth) && String(oldData[i][headers.indexOf("區")]).includes("準決賽")) {
+         sheet.deleteRow(i + 1);
+     }
   }
 
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["年月", "比賽時間", "輪次", "區", "場地", "A隊名", "A隊員1", "A隊員2", "A隊比分", "B隊比分", "B隊名", "B隊員1", "B隊員2", "裁判", "比賽狀態"]);
-  }
+  // 取得對應寫入 index，為了避免固定欄位踩雷
+  const headIdx = {};
+  headers.forEach((h, i) => headIdx[h] = i);
 
-  const pairings = [
-    { teamA: ranks[0].name, teamB: ranks[3].name, court: "C", round: "準決賽(1v4)" },
-    { teamA: ranks[1].name, teamB: ranks[2].name, court: "B", round: "準決賽(2v3)" }
-  ];
-
-  pairings.forEach(p => {
-    // 強化過濾邏輯：確保隊名匹配精準
-    const playersA = regItems.filter(i => String(i.隊名 || i["隊名"]).trim() === String(p.teamA).trim());
-    const playersB = regItems.filter(i => String(i.隊名 || i["隊名"]).trim() === String(p.teamB).trim());
-
-    const sequence = [[1,2], [2,3], [3,4], [4,5], [5,6], [6,1]];
+  customizedData.forEach(p => {
+    const rowObj = [];
+    headers.forEach(() => rowObj.push(""));
     
-    sequence.forEach((pair, idx) => {
-      // 強化搜尋邏輯：數字轉型比對
-      const pA1Obj = playersA.find(x => parseInt(x.棒次 || x["棒次"]) === pair[0]);
-      const pA2Obj = playersA.find(x => parseInt(x.棒次 || x["棒次"]) === pair[1]);
-      const pB1Obj = playersB.find(x => parseInt(x.棒次 || x["棒次"]) === pair[0]);
-      const pB2Obj = playersB.find(x => parseInt(x.棒次 || x["棒次"]) === pair[1]);
-      
-      const pA1 = pA1Obj ? pA1Obj.姓名 || pA1Obj["姓名"] : "待定";
-      const pA2 = pA2Obj ? pA2Obj.姓名 || pA2Obj["姓名"] : "待定";
-      const pB1 = pB1Obj ? pB1Obj.姓名 || pB1Obj["姓名"] : "待定";
-      const pB2 = pB2Obj ? pB2Obj.姓名 || pB2Obj["姓名"] : "待定";
-      
-      const targetScore = (idx + 1) * 11;
-      const relayLabel = targetScore + "分接力";
+    rowObj[headIdx["年月"]] = yearMonth;
+    rowObj[headIdx["比賽時間"]] = "15:30"; // 預設時間
+    rowObj[headIdx["輪次"]] = p.targetScore; 
+    rowObj[headIdx["區"]] = p.area;
+    rowObj[headIdx["場地"]] = p.court;
+    rowObj[headIdx["A隊名"]] = p.teamA;
+    rowObj[headIdx["A隊員1"]] = p.A1;
+    rowObj[headIdx["A隊員2"]] = p.A2;
+    rowObj[headIdx["A隊員3"]] = p.A3 || "";
+    rowObj[headIdx["A隊比分"]] = 0;
+    rowObj[headIdx["B隊比分"]] = 0;
+    rowObj[headIdx["B隊名"]] = p.teamB;
+    rowObj[headIdx["B隊員1"]] = p.B1;
+    rowObj[headIdx["B隊員2"]] = p.B2;
+    rowObj[headIdx["B隊員3"]] = p.B3 || "";
+    rowObj[headIdx["裁判"]] = "";
+    rowObj[headIdx["比賽狀態"]] = "待賽";
 
-      sheet.appendRow([
-        yearMonth, "15:30", relayLabel, p.round, p.court,
-        p.teamA, pA1, pA2, 0,
-        0, p.teamB, pB1, pB2, "", "待賽"
-      ]);
-    });
+    sheet.appendRow(rowObj);
   });
 
-  return { status: "success", message: "追分賽準決賽程已成功產生！" };
+  return { status: "success", message: "追分賽(準決賽)已依照自訂順序成功產生！" };
 }
 
 /**
- * 更新追分賽裁判比分 (分頁 8 專屬回寫)
+ * 更新追分賽裁判比分，並承接至自訂下一棒
  */
 function logicUpdateChasingScore(d) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -498,124 +516,98 @@ function logicUpdateChasingScore(d) {
   if (!sheet) return { status: "error", message: "找不到追分賽紀錄表" };
   
   const rows = sheet.getDataRange().getValues();
+  const headIdx = {};
+  rows[0].forEach((h, i) => headIdx[h] = i);
+  
   for (let i = 1; i < rows.length; i++) {
-    let rYM = rows[i][0];
+    let rYM = rows[i][headIdx["年月"]];
     if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
     
-    // 對齊邏輯：年月 && 輪次 (接力進度) && 區 (對戰分組) && 場地
+    // 對齊邏輯：年月 && 輪次 && 區 && 場地
     if (String(rYM) === String(d.yearMonth) && 
-        rows[i][2] == d.round && 
-        rows[i][3] == d.area && 
-        rows[i][4] == d.court) {
+        rows[i][headIdx["輪次"]] == d.round && 
+        rows[i][headIdx["區"]] == d.area && 
+        rows[i][headIdx["場地"]] == d.court) {
       
-      if (d.startTime) sheet.getRange(i + 1, 14).setValue("開賽: " + d.startTime); // 備註在裁判欄或時間欄，依習慣錄製
-      sheet.getRange(i + 1, 9).setValue(d.scoreA);
-      sheet.getRange(i + 1, 10).setValue(d.scoreB);
-      if (d.referee !== undefined) sheet.getRange(i + 1, 14).setValue(d.referee);
+      if (d.startTime) sheet.getRange(i + 1, headIdx["裁判"] + 1).setValue("開賽: " + d.startTime);
+      sheet.getRange(i + 1, headIdx["A隊比分"] + 1).setValue(d.scoreA);
+      sheet.getRange(i + 1, headIdx["B隊比分"] + 1).setValue(d.scoreB);
+      if (d.referee !== undefined) sheet.getRange(i + 1, headIdx["裁判"] + 1).setValue(d.referee);
       
       const newStatus = d.status || "已完賽";
-      sheet.getRange(i + 1, 15).setValue(newStatus);
+      sheet.getRange(i + 1, headIdx["比賽狀態"] + 1).setValue(newStatus);
       
-      // --- 新增：接力比分自動承接邏輯 ---
+      // 自動尋找下一棒：同一場地、同一區塊中，出現在當前場次之後且為「待賽」的第一場
       if (newStatus === "已完賽") {
-        const currentRef = rows[i][2]; // 例如 "11分接力"
-        const currentScore = parseInt(currentRef.replace(/[^0-9]/g, ""));
-        
-        if (currentScore < 66) {
-          const nextScore = currentScore + 11;
-          const nextRef = nextScore + "分接力";
-          
-          // 搜尋下一棒的列
-          for (let j = 1; j < rows.length; j++) {
-            if (String(rows[j][2]) === nextRef && 
-                String(rows[j][3]) === String(d.area) && 
-                String(rows[j][4]) === String(d.court)) {
-              
-              sheet.getRange(j + 1, 9).setValue(d.scoreA); // 寫入下一棒 A 初始分
-              sheet.getRange(j + 1, 10).setValue(d.scoreB); // 寫入下一棒 B 初始分
-              break;
-            }
+        for (let j = i + 1; j < rows.length; j++) {
+          if (String(rows[j][headIdx["區"]]) === String(d.area) && 
+              String(rows[j][headIdx["場地"]]) === String(d.court) &&
+              String(rows[j][headIdx["比賽狀態"]]).includes("待賽")) {
+            
+            // 寫入下一棒初始分
+            sheet.getRange(j + 1, headIdx["A隊比分"] + 1).setValue(d.scoreA);
+            sheet.getRange(j + 1, headIdx["B隊比分"] + 1).setValue(d.scoreB);
+            break;
           }
         }
       }
-      // --------------------------------
-      
-      return { status: "success", message: "追分賽得分已成功更新，並已交接至下一棒！" };
+      return { status: "success", message: "比分已更新，自動銜接下一手！" };
     }
   }
-  return { status: "error", message: "找不到該場追分接力賽 (請確認輪次與分組)" };
+  return { status: "error", message: "找不到該場追分接力賽" };
 }
 
 /**
- * 產生決賽與季軍賽程 (基於準決賽結果)
+ * 產生決賽與季軍賽程，接收前端自訂出戰順序表
  */
-function logicGenerateFinals(yearMonth) {
+function logicGenerateFinals(yearMonth, customizedData) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const chasingItems = helperGetData(CONFIG.SHEET_CHASING, yearMonth);
-  if (chasingItems.length === 0) return { status: "error", message: "找不到準決賽紀錄" };
+  if (!customizedData || customizedData.length === 0) return { status: "error", message: "沒有接收到自訂賽程資料" };
 
-  // 1. 找出準決賽的最終分進度 (66分接力)
-  const semiFinals = chasingItems.filter(i => {
-    const relay = String(i.輪次 || i["輪次"] || "");
-    const area = String(i.區 || i["區"] || "");
-    return area.includes("準決賽") && relay.includes("66分");
+  let sheet = ss.getSheetByName(CONFIG.SHEET_CHASING);
+  if (!sheet) sheet = ss.insertSheet(CONFIG.SHEET_CHASING);
+  
+  const headers = ensureChasingHeaders(sheet);
+  
+  // 清除舊的該月決賽資料
+  const oldData = sheet.getDataRange().getValues();
+  for (let i = oldData.length - 1; i >= 1; i--) {
+     let rYM = oldData[i][0];
+     if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
+     if (String(rYM) === String(yearMonth) && (String(oldData[i][headers.indexOf("區")]).includes("冠軍賽") || String(oldData[i][headers.indexOf("區")]).includes("季軍賽"))) {
+         sheet.deleteRow(i + 1);
+     }
+  }
+
+  const headIdx = {};
+  headers.forEach((h, i) => headIdx[h] = i);
+
+  customizedData.forEach(p => {
+    const rowObj = [];
+    headers.forEach(() => rowObj.push(""));
+    
+    rowObj[headIdx["年月"]] = yearMonth;
+    rowObj[headIdx["比賽時間"]] = "15:30";
+    rowObj[headIdx["輪次"]] = p.targetScore; 
+    rowObj[headIdx["區"]] = p.area;
+    rowObj[headIdx["場地"]] = p.court;
+    rowObj[headIdx["A隊名"]] = p.teamA;
+    rowObj[headIdx["A隊員1"]] = p.A1;
+    rowObj[headIdx["A隊員2"]] = p.A2;
+    rowObj[headIdx["A隊員3"]] = p.A3 || "";
+    rowObj[headIdx["A隊比分"]] = 0;
+    rowObj[headIdx["B隊比分"]] = 0;
+    rowObj[headIdx["B隊名"]] = p.teamB;
+    rowObj[headIdx["B隊員1"]] = p.B1;
+    rowObj[headIdx["B隊員2"]] = p.B2;
+    rowObj[headIdx["B隊員3"]] = p.B3 || "";
+    rowObj[headIdx["裁判"]] = "";
+    rowObj[headIdx["比賽狀態"]] = "待賽";
+
+    sheet.appendRow(rowObj);
   });
 
-  if (semiFinals.length < 2) return { status: "error", message: "準決賽尚未全數完賽 (需有兩組 66 分紀錄)" };
-
-  // 2. 判定勝負
-  const winners = [];
-  const losers = [];
-
-  semiFinals.forEach(m => {
-    const sA = parseInt(m.A隊比分 || 0);
-    const sB = parseInt(m.B隊比分 || 0);
-    const tA = m.A隊名 || m["A隊名"];
-    const tB = m.B隊名 || m["B隊名"];
-
-    if (sA > sB) {
-      winners.push(tA);
-      losers.push(tB);
-    } else {
-      winners.push(tB);
-      losers.push(tA);
-    }
-  });
-
-  // 3. 準備寫入 (增量寫入，不清除舊資料)
-  const regItems = helperGetData(CONFIG.SHEET_REGISTRATION, yearMonth);
-  const sheet = ss.getSheetByName(CONFIG.SHEET_CHASING);
-
-  const pairings = [
-    { teamA: winners[0], teamB: winners[1], court: "C", round: "冠軍賽" },
-    { teamA: losers[0], teamB: losers[1], court: "B", round: "季軍賽" }
-  ];
-
-  pairings.forEach(p => {
-    const playersA = regItems.filter(i => String(i.隊名 || i["隊名"]).trim() === String(p.teamA).trim());
-    const playersB = regItems.filter(i => String(i.隊名 || i["隊名"]).trim() === String(p.teamB).trim());
-
-    const sequence = [[1,2], [2,3], [3,4], [4,5], [5,6], [6,1]];
-    sequence.forEach((pair, idx) => {
-      const pA1Obj = playersA.find(x => parseInt(x.棒次 || x["棒次"]) === pair[0]);
-      const pA2Obj = playersA.find(x => parseInt(x.棒次 || x["棒次"]) === pair[1]);
-      const pB1Obj = playersB.find(x => parseInt(x.棒次 || x["棒次"]) === pair[0]);
-      const pB2Obj = playersB.find(x => parseInt(x.棒次 || x["棒次"]) === pair[1]);
-      
-      const pA1 = pA1Obj ? pA1Obj.姓名 || pA1Obj["姓名"] : "待定";
-      const pA2 = pA2Obj ? pA2Obj.姓名 || pA2Obj["姓名"] : "待定";
-      const pB1 = pB1Obj ? pB1Obj.姓名 || pB1Obj["姓名"] : "待定";
-      const pB2 = pB2Obj ? pB2Obj.姓名 || pB2Obj["姓名"] : "待定";
-      
-      const relayLabel = ((idx + 1) * 11) + "分接力";
-      sheet.appendRow([
-        yearMonth, "15:30", relayLabel, p.round, p.court,
-        p.teamA, pA1, pA2, 0, 0, p.teamB, pB1, pB2, "", "待賽"
-      ]);
-    });
-  });
-
-  return { status: "success", message: "冠軍賽與季軍賽程已成功產生！" };
+  return { status: "success", message: "冠軍賽與季軍賽程已依照自訂順序成功產生！" };
 }
 
 /**
@@ -819,35 +811,57 @@ function logicCalculatePoints(yearMonth, manualData) {
     }
   });
 
-  // 5. 計算當月淘汰賽名次給分 (冠軍300/亞軍250/季軍200/殿軍150)
+  // 5. 計算當月淘汰賽名次給分 (包含 A隊員3, B隊員3)
   const chasingMatches = helperGetData(CONFIG.SHEET_CHASING, yearMonth);
-  const finals = chasingMatches.filter(m => String(m["輪次"]).includes("66分") && (String(m["區"]).includes("冠軍賽") || String(m["區"]).includes("季軍賽")));
+  // 篩選出決賽場次 (通常是 66 分或該系列最後一場)
+  const finals = chasingMatches.filter(m => (String(m["區"]).includes("冠軍賽") || String(m["區"]).includes("季軍賽")) && String(m["比賽狀態"]).includes("已完賽"));
   
-  const elimPointsMapping = {}; 
-  const elimRankMapping = {}; 
-  
+  // 找出各組最終比分最高的場次來判定隊伍排名
+  const finalRanks = {}; // { "冠軍賽": { winner: "", loser: "" } }
   finals.forEach(m => {
-    const isChamp = String(m["區"]).includes("冠軍賽");
+    const area = m["區"];
+    if (!finalRanks[area]) finalRanks[area] = { sA: -1, sB: -1, teamA: m["A隊名"], teamB: m["B隊名"] };
     const sA = parseInt(m["A隊比分"]) || 0;
     const sB = parseInt(m["B隊比分"]) || 0;
-    const tA = m["A隊名"];
-    const tB = m["B隊名"];
-    
-    if (sA > sB) {
-      if (isChamp) { elimPointsMapping[tA] = 300; elimRankMapping[tA] = "冠軍"; elimPointsMapping[tB] = 250; elimRankMapping[tB] = "亞軍"; }
-      else { elimPointsMapping[tA] = 200; elimRankMapping[tA] = "季軍"; elimPointsMapping[tB] = 150; elimRankMapping[tB] = "殿軍"; }
-    } else if (sB > sA) {
-      if (isChamp) { elimPointsMapping[tB] = 300; elimRankMapping[tB] = "冠軍"; elimPointsMapping[tA] = 250; elimRankMapping[tA] = "亞軍"; }
-      else { elimPointsMapping[tB] = 200; elimRankMapping[tB] = "季軍"; elimPointsMapping[tA] = 150; elimRankMapping[tA] = "殿軍"; }
+    if (sA > finalRanks[area].sA || sB > finalRanks[area].sB) {
+      finalRanks[area].sA = sA;
+      finalRanks[area].sB = sB;
     }
   });
 
-  Object.keys(playersMap).forEach(name => {
-    const t = playersMap[name].team;
-    if (t && elimPointsMapping[t]) {
-      playersMap[name].elimPts = elimPointsMapping[t];
-      playersMap[name].elimRank = elimRankMapping[t];
+  const elimPointsMapping = {}; 
+  const elimRankMapping = {}; 
+
+  Object.keys(finalRanks).forEach(area => {
+    const r = finalRanks[area];
+    const isChamp = area.includes("冠軍賽");
+    if (r.sA > r.sB) {
+      if (isChamp) { elimPointsMapping[r.teamA] = 300; elimRankMapping[r.teamA] = "冠軍"; elimPointsMapping[r.teamB] = 250; elimRankMapping[r.teamB] = "亞軍"; }
+      else { elimPointsMapping[r.teamA] = 200; elimRankMapping[r.teamA] = "季軍"; elimPointsMapping[r.teamB] = 150; elimRankMapping[r.teamB] = "殿軍"; }
+    } else if (r.sB > r.sA) {
+      if (isChamp) { elimPointsMapping[r.teamB] = 300; elimRankMapping[r.teamB] = "冠軍"; elimPointsMapping[r.teamA] = 250; elimRankMapping[r.teamA] = "亞軍"; }
+      else { elimPointsMapping[r.teamB] = 200; elimRankMapping[r.teamB] = "季軍"; elimPointsMapping[r.teamA] = 150; elimRankMapping[r.teamA] = "殿軍"; }
     }
+  });
+
+  // 分配積分至所有隊員 (含 1, 2, 3)
+  chasingMatches.forEach(m => {
+    const tA = m["A隊名"];
+    const tB = m["B隊名"];
+    
+    [tA, tB].forEach(team => {
+      if (elimPointsMapping[team]) {
+        const isTeamA = (team === tA);
+        const prefix = isTeamA ? "A隊員" : "B隊員";
+        [1, 2, 3].forEach(num => {
+          const pName = m[prefix + num];
+          if (pName && pName !== "待定" && playersMap[pName]) {
+            playersMap[pName].elimPts = elimPointsMapping[team];
+            playersMap[pName].elimRank = elimRankMapping[team];
+          }
+        });
+      }
+    });
   });
 
   // 6. 加總並排序結果陣列

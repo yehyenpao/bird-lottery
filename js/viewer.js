@@ -85,14 +85,14 @@ const Viewer = {
                                 <div style="display:flex; justify-content:space-between; align-items:center; gap: 10px;">
                                     <div style="text-align:center; flex:1;">
                                         <div style="font-weight:bold; font-size:1.1rem; color:white;">${m["A隊名"] || ""}</div>
-                                        <small style="color:var(--text-dim);">${m["A隊員1"] || ""}, ${m["A隊員2"] || ""}</small>
+                                        <small style="color:var(--text-dim);">${[m["A隊員1"], m["A隊員2"], m["A隊員3"]].filter(p => p && p !== "待定").join(", ")}</small>
                                     </div>
                                     <div style="font-size:1.8rem; font-weight:bold; color:var(--accent); min-width: 80px; text-align:center; padding: 5px 10px; background:rgba(0,0,0,0.3); border-radius:8px;">
                                         ${aScore} : ${bScore}
                                     </div>
                                     <div style="text-align:center; flex:1;">
                                         <div style="font-weight:bold; font-size:1.1rem; color:white;">${m["B隊名"] || ""}</div>
-                                        <small style="color:var(--text-dim);">${m["B隊員1"] || ""}, ${m["B隊員2"] || ""}</small>
+                                        <small style="color:var(--text-dim);">${[m["B隊員1"], m["B隊員2"], m["B隊員3"]].filter(p => p && p !== "待定").join(", ")}</small>
                                     </div>
                                 </div>
                                 ${m["裁判"] ? `<div style="text-align:right; margin-top:0.8rem; font-size:0.85rem; color:var(--text-dim); border-top: 1px dashed rgba(255,255,255,0.05); padding-top:0.5rem;">裁判: ${m["裁判"]}</div>` : ''}
@@ -163,7 +163,7 @@ const Viewer = {
                 const isDone = status.includes("完賽");
                 const aName = m["A隊名"];
                 const bName = m["B隊名"];
-                const isTeamA = (m["A隊員1"] === query || m["A隊員2"] === query || aName === query);
+                const isTeamA = (m["A隊員1"] === query || m["A隊員2"] === query || m["A隊員3"] === query || aName === query);
                 
                 // Highlight the user's team
                 const queryAStyle = isTeamA ? "color:var(--accent); font-weight:bold;" : "";
@@ -178,14 +178,14 @@ const Viewer = {
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div style="text-align:center; flex:1; ${queryAStyle}">
                             <div>${aName}</div>
-                            <small>${m["A隊員1"]||""}, ${m["A隊員2"]||""}</small>
+                            <small>${[m["A隊員1"], m["A隊員2"], m["A隊員3"]].filter(p => p && p !== "待定").join(", ")}</small>
                         </div>
                         <div style="padding: 0 1rem; font-size:1.5rem; font-weight:bold;">
                             ${m["A隊比分"]||0} - ${m["B隊比分"]||0}
                         </div>
                         <div style="text-align:center; flex:1; ${queryBStyle}">
                             <div>${bName}</div>
-                            <small>${m["B隊員1"]||""}, ${m["B隊員2"]||""}</small>
+                            <small>${[m["B隊員1"], m["B隊員2"], m["B隊員3"]].filter(p => p && p !== "待定").join(", ")}</small>
                         </div>
                     </div>
                 </div>`;
