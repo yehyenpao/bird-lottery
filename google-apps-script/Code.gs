@@ -104,6 +104,9 @@ function handleRequest(e) {
       case "uploadPhoto":
         result = logicUploadPhoto(data);
         break;
+      case "getLatestDate":
+        result = { status: "success", data: logicGetLatestDate() };
+        break;
       case "debugSheet":
         result = { status: "success", data: helperDebugSheet(e.parameter.sheet || CONFIG.SHEET_CHASING) };
         break;
@@ -147,28 +150,38 @@ function helperGetData(sheetName, yearMonth) {
     }
     
     const targetDate = String(yearMonth).trim();
-    
-    // 如果傳入的是 yyyy-MM-dd，則精確比對；如果只有 yyyy-MM，則比對前 7 碼
-    const isFullDate = targetDate.length === 10;
-    
-    if (!yearMonth || (isFullDate ? rYM === targetDate : rYM.substring(0, 7) === targetDate)) {
-      const obj = {};
-      headers.forEach((h, idx) => {
-        let val = data[i][idx];
-        
-        // 處理「比賽時間」欄位：轉為 HH:mm 格式
-        if (idx === timeIdx && val instanceof Date) {
-          val = Utilities.formatDate(val, CONFIG.TIMEZONE, "HH:mm");
-        }
-        // 處理「年月」欄位：統一輸出為 yyyy-MM 字串
-        if (idx === ymIdx && val instanceof Date) {
-          val = Utilities.formatDate(val, CONFIG.TIMEZONE, "yyyy-MM-dd");
-        }
-        
-        obj[h] = val;
-      });
-      result.push(obj);
+    if (!targetDate) {
+      // 不篩選日期
+    } else {
+      let isMatch = false;
+      if (rYM === targetDate) {
+        isMatch = true;
+      } else if (rYM.length === 7 && targetDate.startsWith(rYM)) {
+        // 舊資料支援匹配整個月
+        isMatch = true;
+      } else if (targetDate.length === 7 && rYM.startsWith(targetDate)) {
+        isMatch = true;
+      }
+      
+      if (!isMatch) continue;
     }
+
+    const obj = {};
+    headers.forEach((h, idx) => {
+      let val = data[i][idx];
+      
+      // 處理「比賽時間」欄位：轉為 HH:mm 格式
+      if (idx === timeIdx && val instanceof Date) {
+        val = Utilities.formatDate(val, CONFIG.TIMEZONE, "HH:mm");
+      }
+      // 處理「年月」欄位：統一輸出為 yyyy-MM-dd 字串
+      if (idx === ymIdx && val instanceof Date) {
+        val = Utilities.formatDate(val, CONFIG.TIMEZONE, "yyyy-MM-dd");
+      }
+      
+      obj[h] = val;
+    });
+    result.push(obj);
   }
   return result;
 }
@@ -317,11 +330,15 @@ function logicUpdateScore(d) {
   const rows = sheet.getDataRange().getValues();
   
   for (let i = 1; i < rows.length; i++) {
-    let rYM = rows[i][1]; // 年月移動到第 2 欄 (Index 1)
-    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
+    let rYM = rows[i][1];
+    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM-dd");
+    else rYM = String(rYM).trim().substring(0, 10);
     
+    let isYMMatch = (rYM === String(d.yearMonth));
+    if (!isYMMatch && rYM.length === 7) isYMMatch = d.yearMonth.startsWith(rYM);
+
     // 輪次 (Index 3), 場地 (Index 5)
-    if (String(rYM) === String(d.yearMonth) && rows[i][3] == d.round && rows[i][5] == d.court) {
+    if (isYMMatch && rows[i][3] == d.round && rows[i][5] == d.court) {
       if (d.startTime) sheet.getRange(i + 1, 3).setValue(d.startTime); // 比賽時間移動到第 3 欄 (Index 2)
       sheet.getRange(i + 1, 10).setValue(d.scoreA);
       sheet.getRange(i + 1, 11).setValue(d.scoreB);
@@ -704,8 +721,13 @@ function logicAutoGroup(yearMonth) {
 
   for (let i = 1; i < data.length; i++) {
     let rYM = data[i][0];
-    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
-    if (String(rYM) === String(yearMonth)) {
+    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM-dd");
+    else rYM = String(rYM).trim().substring(0, 10);
+
+    let isYMMatch = (rYM === String(yearMonth));
+    if (!isYMMatch && rYM.length === 7) isYMMatch = yearMonth.startsWith(rYM);
+
+    if (isYMMatch) {
       // 區在第 5 欄 (Index 4)
       const pAreaRaw = String(data[i][4] || "").trim();
       // 模糊比對區名 (例如 "猛禽" 匹配 "猛禽區")
@@ -828,6 +850,9 @@ function logicCalculatePoints(yearMonth, manualData) {
     }
   }
 
+  // 1.1 過濾非官方球員 (僅藍、黑、青、粉鳥隊計算積分)
+  const officialTeams = ["藍鳥隊", "黑鳥隊", "青鳥隊", "粉鳥隊"];
+  
   // 3. 初始化全體球員字典 mapping
   const playersMap = {}; 
   
@@ -902,10 +927,14 @@ function logicCalculatePoints(yearMonth, manualData) {
     if (m["B隊員2"] && m["B隊員2"] !== "待定") teamBPlayers.push(m["B隊員2"]);
 
     teamAPlayers.forEach(p => {
-      if (playersMap[p]) playersMap[p].rrPts += aPts;
+      if (playersMap[p] && officialTeams.includes(playersMap[p].team)) {
+        playersMap[p].rrPts += aPts;
+      }
     });
     teamBPlayers.forEach(p => {
-      if (playersMap[p]) playersMap[p].rrPts += bPts;
+      if (playersMap[p] && officialTeams.includes(playersMap[p].team)) {
+        playersMap[p].rrPts += bPts;
+      }
     });
   });
 
@@ -967,7 +996,7 @@ function logicCalculatePoints(yearMonth, manualData) {
         const prefix = isTeamA ? "A隊員" : "B隊員";
         [1, 2, 3].forEach(num => {
           const pName = m[prefix + num];
-          if (pName && pName !== "待定" && playersMap[pName]) {
+          if (pName && pName !== "待定" && playersMap[pName] && officialTeams.includes(playersMap[pName].team)) {
             playersMap[pName].elimPts = elimPointsMapping[team];
             playersMap[pName].elimRank = elimRankMapping[team];
           }
@@ -1151,6 +1180,44 @@ function syncPlayerDatabase(names) {
   newNames.forEach(n => {
     sheet.appendRow([n.trim(), ""]);
   });
+}
+
+/**
+ * 獲取系統中最近的一個歷史賽事日期 (<= 今日)
+ */
+function logicGetLatestDate() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetsToCheck = [CONFIG.SHEET_CHASING, CONFIG.SHEET_ROUND_ROBIN, CONFIG.SHEET_REGISTRATION];
+  const today = new Date();
+  today.setHours(23, 59, 59, 999); // 包含今日
+  
+  let allDates = [];
+  
+  sheetsToCheck.forEach(sName => {
+    const s = ss.getSheetByName(sName);
+    if (!s) return;
+    const data = s.getDataRange().getValues();
+    if (data.length <= 1) return;
+    
+    // 年月欄位索引
+    const ymIdx = data[0].indexOf("年月");
+    if (ymIdx === -1) return;
+    
+    for (let i = 1; i < data.length; i++) {
+        let val = data[i][ymIdx];
+        if (!val) continue;
+        let d = val instanceof Date ? val : new Date(val);
+        if (!isNaN(d.getTime()) && d <= today) {
+            allDates.push(d);
+        }
+    }
+  });
+  
+  if (allDates.length === 0) return Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "yyyy-MM-dd");
+  
+  // 排序並取最晚日期
+  allDates.sort((a, b) => b - a);
+  return Utilities.formatDate(allDates[0], CONFIG.TIMEZONE, "yyyy-MM-dd");
 }
 
 /**

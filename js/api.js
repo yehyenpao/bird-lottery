@@ -41,7 +41,7 @@ const API = {
                     });
                     const realBaseUrl = probe.url.split('?')[0];
                     
-                    url = `${realBaseUrl}?action=${action}&yearMonth=${currentYM}`;
+                    url = `${realBaseUrl}?action=${action}&yearMonth=${currentDate}`;
                     fetchOptions = {
                         method: "POST",
                         redirect: "follow",

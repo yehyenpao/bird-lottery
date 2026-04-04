@@ -44,8 +44,9 @@ const Registration = {
                 
                 if (!name) return null; // 無姓名跳過
 
+                const currentDate = document.getElementById("current-date").value;
                 return {
-                    yearMonth: CONFIG.YEAR_MONTH,
+                    yearMonth: currentDate,
                     name, team, area,
                     role: "球員"
                 };
