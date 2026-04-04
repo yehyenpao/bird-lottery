@@ -1,6 +1,6 @@
 let currentRole = 'viewer';
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     // 角色判定
     const urlParams = new URLSearchParams(window.location.search);
     const roleParam = urlParams.get('role');
@@ -95,31 +95,23 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 初始化日期選擇器與監聽
+    // 初始化日期選擇器與點擊前置作業
     const datePicker = document.getElementById("current-date");
     if (datePicker) {
-        // 先設定為今天 (備援)
+        // 先設定為今天 (靜態備援)
         datePicker.value = CONFIG.DEFAULT_DATE;
         
-        // 非同步獲取系統最新比賽日期 (<= 今日)
-        (async () => {
-            try {
-                const res = await API.call("getLatestDate");
-                if (res && res.status === "success" && res.data) {
-                    datePicker.value = res.data;
-                    console.log("自動切換至最新比賽日期:", res.data);
-                    
-                    // 日期變更後，若已經載入分頁則重新整理
-                    const activeLink = document.querySelector(`#${currentNavId} li.active`);
-                    if (activeLink) {
-                        const activeTab = activeLink.getAttribute("data-tab");
-                        loadTabData(activeTab);
-                    }
-                }
-            } catch (e) {
-                console.warn("無法取得最新比賽日期:", e);
+        // 【關鍵優化】循序獲取系統最新比賽日期 (<= 今日)
+        // 避免並行 fetch 導致手機瀏覽器中斷 GAS 的 302 重定向
+        try {
+            const res = await API.call("getLatestDate");
+            if (res && res.status === "success" && res.data) {
+                datePicker.value = res.data;
+                console.log("初始化：已設定最新比賽日期為", res.data);
             }
-        })();
+        } catch (e) {
+            console.warn("無法取得最新比賽日期:", e);
+        }
 
         datePicker.addEventListener("change", () => {
             const activeLink = document.querySelector(`#${currentNavId} li.active`);
