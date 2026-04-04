@@ -175,3 +175,14 @@ function loadTabData(tabId) {
             break;
     }
 }
+
+// 裁判端密碼驗證邏輯
+function requireUmpirePassword(e) {
+    e.preventDefault();
+    const pwd = prompt("請輸入裁判密碼:");
+    if (pwd === "0705") {
+        window.location.href = "?role=umpire";
+    } else if (pwd !== null) {
+        alert("密碼錯誤，您無權進入裁判端。");
+    }
+}
