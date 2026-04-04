@@ -262,12 +262,15 @@ textarea {
 .table-container {
     background: var(--card-bg);
     border-radius: 16px;
-    overflow: hidden;
+    overflow-x: auto; /* 允許水平滾動 */
+    overflow-y: hidden;
     border: 1px solid var(--border);
+    -webkit-overflow-scrolling: touch; /* iOS 順暢滑動 */
 }
 
 table {
     width: 100%;
+    min-width: 900px; /* 強制最小寬度，確保內容不擠壓 */
     border-collapse: collapse;
 }
 
@@ -895,5 +898,13 @@ td {
     .lineup-table select {
         width: 80px;
         font-size: 0.75rem;
+    }
+    
+    /* 全域表格行動端優化：橫向滾動時防止標題與內容換行 */
+    .table-container th, 
+    .table-container td {
+        white-space: nowrap;
+        padding: 0.8rem 0.5rem;
+        font-size: 0.85rem;
     }
 }
