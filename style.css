@@ -32,7 +32,8 @@ body {
     background-color: var(--bg-dark);
     color: var(--text-main);
     overflow: hidden;
-    height: 100vh;
+    height: 100vh; /* Fallback */
+    height: 100dvh; /* 動態視窗高度，有效解決手機下方導覽列的高度誤差 */
 }
 
 #app {
@@ -214,6 +215,7 @@ body {
 .tab-content {
     display: none;
     animation: fadeIn 0.4s ease-out;
+    padding-bottom: 150px; /* 確保所有分頁的內容捲到底部時，都有足夠防遮擋留白 */
 }
 
 .tab-content.active {
@@ -311,10 +313,6 @@ td {
 #tab-points .pivot-table:first-of-type th, 
 #tab-points .pivot-table:first-of-type td { padding: 0.5rem; }
 
-/* 為了防止手機下方書籤功能列/工具列擋住內容，增加統一 padding */
-.content {
-    padding-bottom: 120px;
-}
 
 
 /* 裁判計分頂部資訊條 */
