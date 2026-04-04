@@ -172,7 +172,7 @@ const Viewer = {
                 html += `
                 <div class="card" style="padding:1rem;">
                     <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:0.5rem; margin-bottom:0.5rem;">
-                        <span style="color:var(--primary);">${m.MatchType} - ${m["輪次"]}</span>
+                        <span style="color:var(--primary);"><i class="far fa-calendar-alt"></i> ${m["年月"] || ""} | ${m.MatchType} - ${m["輪次"]}</span>
                         <span class="status-badge ${isDone ? 'status-done' : 'status-pending'}">${status}</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
