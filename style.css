@@ -936,3 +936,99 @@ td {
         font-size: 0.85rem;
     }
 }
+
+/* 裁判計分板：手機專屬最佳化 (直立 與 橫向) */
+
+/* 1. 手機直立模式 (窄螢幕)：上下堆疊布局 */
+@media (max-width: 600px) and (orientation: portrait) {
+    .score-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .score-row.swap-sides {
+        flex-direction: column-reverse; /* 上下堆疊時換邊邏輯翻轉 */
+    }
+    .score-box {
+        padding: 1.5rem 1rem;
+    }
+    .score-box h4 {
+        font-size: 1.8rem;
+    }
+    .points {
+        font-size: 6rem; /* 直立縮小數字讓它不會頂到螢幕邊緣 */
+        margin: 0.5rem 0;
+    }
+    .controls button {
+        width: 55px;
+        height: 55px;
+        font-size: 1.8rem;
+    }
+    /* 轉向按鈕改為垂直方向指示 */
+    #btn-swap-sides {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        transform: rotate(90deg); 
+    }
+    #btn-swap-sides:hover {
+        transform: rotate(270deg) scale(1.1);
+    }
+    .referee-bottom-panel {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .referee-field-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .referee-field-group input {
+        width: 100%;
+    }
+}
+
+/* 2. 手機橫向模式 (寬螢幕高度受限)：緊湊布局 */
+@media (max-height: 500px) and (orientation: landscape) {
+    .setup-match {
+        margin-bottom: 0.5rem; /* 節省頂部空間 */
+    }
+    .referee-meta {
+        margin-bottom: 0.5rem;
+    }
+    .score-box {
+        padding: 0.5rem 1rem; /* 大幅削減上下內距 */
+        border-radius: 16px;
+    }
+    .score-box h4 {
+        font-size: 1.5rem;
+        margin-bottom: 0.2rem;
+    }
+    .score-box p {
+        font-size: 0.8rem;
+        margin-bottom: 0.2rem;
+    }
+    .points {
+        font-size: 4rem; /* 橫向高度吃緊，大幅縮小字級 */
+        margin: 0.2rem 0;
+    }
+    .controls {
+        margin-top: 0.2rem;
+        gap: 0.8rem;
+    }
+    .controls button {
+        width: 45px;
+        height: 45px;
+        font-size: 1.5rem;
+    }
+    #btn-swap-sides {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+    .referee-bottom-panel {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+    }
+    .scoreboard {
+        margin: 0.5rem auto;
+    }
+}
