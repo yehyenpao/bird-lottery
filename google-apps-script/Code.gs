@@ -1089,11 +1089,18 @@ function helperGetPointsRecords(yearMonth) {
       headers.forEach((h, idx) => {
         obj[h] = data[i][idx];
       });
-      // 為維持與 calculatePoints 回傳格式一致
+      // 轉換為與 calculatePoints 回傳格式一致的物件
       result.push({
         name: obj["姓名"],
         team: obj["隊名"],
         area: obj["區"],
+        rrRank: obj["循環名次"],
+        elimRank: obj["淘汰名次"],
+        currPts: obj["目前積點"],
+        guessPts: obj["猜隊"],
+        refPts: obj["裁判"],
+        rrPts: obj["循環分"],
+        elimPts: obj["淘汰分"],
         totalPts: obj["累積積點"]
       });
     }

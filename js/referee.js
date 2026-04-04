@@ -167,8 +167,10 @@ const Referee = {
     async syncScoreToServer(status) {
         if (!this.currentMatch) return;
         
+        const dateEl = document.getElementById("current-date");
+        const dateStr = dateEl ? dateEl.value : CONFIG.DEFAULT_DATE;
         const data = {
-            yearMonth: CONFIG.YEAR_MONTH,
+            yearMonth: dateStr,
             round: this.currentMatch.輪次,
             court: this.currentMatch.場地,
             scoreA: this.currentMatch.A隊比分,

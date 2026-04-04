@@ -2,6 +2,26 @@ const Points = {
     async init() {
         this.bindEvents();
         await this.loadParticipants();
+        await this.loadExistingReport();
+    },
+
+    async loadExistingReport() {
+        const tbody = document.getElementById("points-record-tbody");
+        if (!tbody) return;
+        
+        tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;"><i class="fas fa-sync fa-spin"></i> 載入現有積點紀錄中...</td></tr>';
+        
+        try {
+            const res = await API.getPointsRecords();
+            if (res && res.status === "success" && res.data && res.data.length > 0) {
+                this.renderReport(res.data);
+            } else {
+                tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;">目前查無此日期的積點紀錄</td></tr>';
+            }
+        } catch (e) {
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; color: #ff6b6b;">讀取失敗</td></tr>';
+        }
     },
 
     bindEvents() {
