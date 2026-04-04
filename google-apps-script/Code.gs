@@ -46,6 +46,9 @@ function handleRequest(e) {
     let result = { status: "error", message: "未定義的指令" };
     
     switch (action) {
+      case "ping":
+        result = { status: "success", message: "pong" };
+        break;
       case "getRegistrations":
         result = { status: "success", data: helperGetData(CONFIG.SHEET_REGISTRATION, yearMonth) };
         break;
@@ -1249,53 +1252,84 @@ function logicGetPlayersInfo() {
  * 上傳球員照片 (Base64) 至 Google Drive
  */
 function logicUploadPhoto(data) {
-  const { name, base64Data, mimeType } = data;
-  if (!name || !base64Data) {
-    return { status: "error", message: "缺少必要參數 (姓名或圖片資料)" };
-  }
-
-  // 1. 尋找或建立統一照片資料夾
-  const folderName = "羽球系統照片";
-  let uploadFolder;
-  const folders = DriveApp.getFoldersByName(folderName);
-  if (folders.hasNext()) {
-    uploadFolder = folders.next();
-  } else {
-    uploadFolder = DriveApp.createFolder(folderName);
-    // 注意：在此 GAS 架構下，建立後需管理員手動調整為「知道連結的人均可檢視」
-  }
-
-  // 2. 將 base64 解碼並轉成 Blob
-  const byteString = Utilities.base64Decode(base64Data.split(',')[1] || base64Data);
-  const blob = Utilities.newBlob(byteString, mimeType || "image/jpeg", `${name}_大頭貼.jpg`);
-
-  // 3. 建立檔案並組成分享網址
-  const file = uploadFolder.createFile(blob);
-  const fileId = file.getId();
-  const photoUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-
-  // 4. 更新球員資料庫
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(CONFIG.SHEET_PLAYER_DB);
-  if (!sheet) {
-    sheet = ss.insertSheet(CONFIG.SHEET_PLAYER_DB);
-    sheet.appendRow(["姓名", "照片網址"]);
-  }
-
-  const rows = sheet.getDataRange().getValues();
-  let found = false;
-  for (let i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]).trim() === String(name).trim()) {
-      sheet.getRange(i + 1, 2).setValue(photoUrl);
-      found = true;
-      break;
+  try {
+    const { name, base64Data, mimeType } = data;
+    if (!name || !base64Data) {
+      return { status: "error", message: "缺少必要參數 (姓名或圖片資料)" };
     }
-  }
 
-  // 若沒發現這名球員，則新增一行
-  if (!found) {
-    sheet.appendRow([name.trim(), photoUrl]);
-  }
+    // 1. 尋找或建立統一照片資料夾
+    const folderName = "羽球系統照片";
+    let uploadFolder;
+    try {
+      const folders = DriveApp.getFoldersByName(folderName);
+      if (folders.hasNext()) {
+        uploadFolder = folders.next();
+      } else {
+        uploadFolder = DriveApp.createFolder(folderName);
+        try {
+          uploadFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        } catch (e) {
+          Logger.log("資料夾權限設定失敗: " + e.toString());
+        }
+      }
+    } catch (err) {
+      return { status: "error", message: "取得或建立資料夾失敗：" + err.toString() };
+    }
 
-  return { status: "success", message: "照片上傳成功！", photoUrl: photoUrl };
+    // 2. 將 base64 解碼並轉成 Blob
+    const byteString = Utilities.base64Decode(base64Data.split(',')[1] || base64Data);
+    let blob;
+    try {
+      blob = Utilities.newBlob(byteString, mimeType || "image/jpeg", `${name}_大頭貼.jpg`);
+    } catch (err) {
+      return { status: "error", message: "圖片編碼解析失敗：" + err.toString() };
+    }
+
+    // 3. 建立檔案並組成分享網址
+    let file;
+    try {
+      file = uploadFolder.createFile(blob);
+    } catch (err) {
+      return { status: "error", message: "照片檔案寫入失敗 (可能沒有儲存空間)：" + err.toString() };
+    }
+    
+    let sharingMsg = "";
+    try {
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (e) {
+      sharingMsg = " (備註: 自動開放權限失敗，可能是您的 Google 帳號安全性限制，" + e.toString() + ")";
+    }
+    
+    const fileId = file.getId();
+    const photoUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+
+    // 4. 更新球員資料庫
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(CONFIG.SHEET_PLAYER_DB);
+    if (!sheet) {
+      sheet = ss.insertSheet(CONFIG.SHEET_PLAYER_DB);
+      sheet.appendRow(["姓名", "照片網址"]);
+    }
+
+    const rows = sheet.getDataRange().getValues();
+    let found = false;
+    for (let i = 1; i < rows.length; i++) {
+      if (String(rows[i][0]).trim() === String(name).trim()) {
+        sheet.getRange(i + 1, 2).setValue(photoUrl);
+        found = true;
+        break;
+      }
+    }
+
+    // 若沒發現這名球員，則新增一行
+    if (!found) {
+      sheet.appendRow([name.trim(), photoUrl]);
+    }
+
+    return { status: "success", message: "照片上傳成功！" + sharingMsg, photoUrl: photoUrl };
+  } catch (err) {
+    Logger.log("logicUploadPhoto 未預期例外: " + err.toString());
+    return { status: "error", message: "上傳過程發生未預期錯誤：" + err.toString() };
+  }
 }

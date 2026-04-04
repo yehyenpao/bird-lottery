@@ -27,21 +27,13 @@ const API = {
                 const dataStr = encodeURIComponent(JSON.stringify(data));
                 const fullUrl = `${url}&data=${dataStr}`;
                 
-                // URL 長度限制約 8000 chars 對 GAS 來說安全；超過改用兩步 POST
+                // URL 長度限制約 8000 chars 對 GAS 來說安全；超過改用 POST
                 if (fullUrl.length < 7500) {
                     // ── 方法 A：資料塞 URL query parameter，用 GET ──
                     url = fullUrl;
                     fetchOptions = { method: "GET", redirect: "follow" };
                 } else {
-                    // ── 方法 B：資料太大，先解析 redirect URL 再直接 POST ──
-                    // Step 1: 取得 redirect 後的真正 URL
-                    const probe = await fetch(`${baseUrl}?action=ping`, { 
-                        method: "GET", 
-                        redirect: "follow" 
-                    });
-                    const realBaseUrl = probe.url.split('?')[0];
-                    
-                    url = `${realBaseUrl}?action=${action}&yearMonth=${currentDate}`;
+                    // ── 方法 B：資料太大，直接對 GAS 發送 POST，並使用 text/plain 避免 CORS Preflight 放行
                     fetchOptions = {
                         method: "POST",
                         redirect: "follow",
@@ -49,6 +41,7 @@ const API = {
                         headers: { "Content-Type": "text/plain;charset=utf-8" }
                     };
                 }
+
             } else {
                 fetchOptions = { method: "GET", redirect: "follow" };
             }
