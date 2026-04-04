@@ -155,9 +155,19 @@ const Chasing = {
 
         const allData = [...match1Data, ...match2Data];
 
+        // ══ 偵錯：印出將要送出的資料 ══
+        console.group("📋 [Chasing] 準備送出的賽程資料");
+        console.log("rankings:", this.rankings);
+        console.log("lineups.match1:", this.lineups.match1);
+        console.log("lineups.match2:", this.lineups.match2);
+        console.log("allData (共", allData.length, "筆):", JSON.stringify(allData, null, 2));
+        console.log("編碼後 URL 長度:", encodeURIComponent(JSON.stringify(allData)).length, "chars");
+        console.groupEnd();
+
         // 檢查必填 (至少要有成員1,2)
         const invalid = allData.some(d => !d.A1 || !d.A2 || !d.B1 || !d.B2);
         if (invalid) {
+            console.warn("❌ 資料驗證失敗：以下筆資料缺少隊員", allData.filter(d => !d.A1 || !d.A2 || !d.B1 || !d.B2));
             alert("請確保每一輪的隊員1與隊員2皆已填寫！");
             return;
         }
@@ -170,7 +180,9 @@ const Chasing = {
         btn.disabled = true;
 
         try {
+            console.log("🚀 [Chasing] 呼叫 API.generateChasingSchedule...");
             const res = await API.generateChasingSchedule(allData);
+            console.log("📩 [Chasing] API 回應:", res);
             if (res && res.status === "success") {
                 alert("追分賽程(準決賽)已成功產生！");
                 this.load();

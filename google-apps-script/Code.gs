@@ -104,6 +104,9 @@ function handleRequest(e) {
       case "uploadPhoto":
         result = logicUploadPhoto(data);
         break;
+      case "debugSheet":
+        result = { status: "success", data: helperDebugSheet(e.parameter.sheet || CONFIG.SHEET_CHASING) };
+        break;
     }
     
     return createResponse(result);
@@ -134,11 +137,18 @@ function helperGetData(sheetName, yearMonth) {
   const result = [];
   
   for (let i = 1; i < data.length; i++) {
-    // 處理「年月」欄位
+    // 處理「年月」欄位 - 統一轉為 "yyyy-MM" 字串再比對
     let rYM = ymIdx > -1 ? data[i][ymIdx] : "";
-    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
+    if (rYM instanceof Date) {
+      rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
+    } else {
+      // 非 Date 時，取前 7 碼 ("2026-03") 防止格式不一致
+      rYM = String(rYM).trim().substring(0, 7);
+    }
     
-    if (!yearMonth || String(rYM).trim() === String(yearMonth).trim()) {
+    const targetYM = String(yearMonth).trim().substring(0, 7);
+    
+    if (!yearMonth || rYM === targetYM) {
       const obj = {};
       headers.forEach((h, idx) => {
         let val = data[i][idx];
@@ -147,6 +157,10 @@ function helperGetData(sheetName, yearMonth) {
         if (idx === timeIdx && val instanceof Date) {
           val = Utilities.formatDate(val, CONFIG.TIMEZONE, "HH:mm");
         }
+        // 處理「年月」欄位：統一輸出為 yyyy-MM 字串
+        if (idx === ymIdx && val instanceof Date) {
+          val = Utilities.formatDate(val, CONFIG.TIMEZONE, "yyyy-MM");
+        }
         
         obj[h] = val;
       });
@@ -154,6 +168,41 @@ function helperGetData(sheetName, yearMonth) {
     }
   }
   return result;
+}
+
+/**
+ * 診斷用：直接回傳試算表所有原始資料（不篩選年月）
+ */
+function helperDebugSheet(sheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return { error: "找不到工作表: " + sheetName };
+  
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return { rowCount: data.length, headers: data[0] || [], rows: [] };
+  
+  const headers = data[0];
+  const ymIdx = headers.indexOf("年月");
+  
+  // 直接回傳前 10 筆原始資料，以便偵錯
+  const rows = data.slice(1, 11).map((row, i) => {
+    const rawYM = row[ymIdx];
+    return {
+      rowNum: i + 2,
+      rawYM: rawYM instanceof Date ? rawYM.toISOString() : String(rawYM),
+      formattedYM: rawYM instanceof Date ? Utilities.formatDate(rawYM, CONFIG.TIMEZONE, "yyyy-MM") : String(rawYM).substring(0, 7),
+      isDate: rawYM instanceof Date,
+      firstFewCols: row.slice(0, 6).map(v => v instanceof Date ? v.toISOString() : v)
+    };
+  });
+  
+  return {
+    sheetName: sheetName,
+    totalRows: data.length - 1,
+    headers: headers,
+    ymColumnIndex: ymIdx,
+    debugRows: rows
+  };
 }
 
 /**
@@ -426,30 +475,46 @@ function logicUpdatePlayerOrder(dataList) {
 }
 
 /**
- * 確保追分賽具備 第三隊員 的欄位，此函式確保欄位在寫入前存在。
+ * 確保追分賽記錄表欄位正確。判斷基準：是否包含「年月」欄位（而非對齊結構）
+ * 這樣即便表格第一行是標題文字也能正確處理。
  */
 function ensureChasingHeaders(sheet) {
-  let headers = sheet.getDataRange().getValues()[0] || [];
-  if (headers.length === 0) {
-    sheet.appendRow(["年月", "比賽時間", "輪次", "區", "場地", "A隊名", "A隊員1", "A隊員2", "A隊員3", "A隊比分", "B隊比分", "B隊名", "B隊員1", "B隊員2", "B隊員3", "裁判", "比賽狀態"]);
-    return sheet.getDataRange().getValues()[0];
+  const STANDARD_HEADERS = ["\u5e74\u6708", "\u6bd4\u8cfd\u6642\u9593", "\u8f2a\u6b21", "\u5340", "\u5834\u5730", "A\u968a\u540d", "A\u968a\u54e11", "A\u968a\u54e12", "A\u968a\u54e13", "A\u968a\u6bd4\u5206", "B\u968a\u6bd4\u5206", "B\u968a\u540d", "B\u968a\u54e11", "B\u968a\u54e12", "B\u968a\u54e13", "\u88c1\u5224", "\u6bd4\u8cfd\u72c0\u614b"];
+  
+  let rawHeaders = sheet.getDataRange().getValues()[0] || [];
+  let headers = rawHeaders.map(h => String(h || "").trim());
+
+  // 關鍵判斷：只要找不到「年月」欄位，就必須重新初始化
+  // (不管第一行是空的、標題文字、還是其他内容都適用)
+  if (!headers.includes("\u5e74\u6708")) {
+    Logger.log("[ensureChasingHeaders] \u5e74\u6708欄\u4f4d未找到，現有標題: " + JSON.stringify(headers));
+    Logger.log("[ensureChasingHeaders] 重新初始化標題列...");
+    // 先清除不寬用的內容（保留格式），再正確寫入標題
+    // 用 setValues 寫入第一行，避免 appendRow 在已有內容下方新增
+    sheet.clearContents(); // 清除內容（保留格式）
+    sheet.appendRow(STANDARD_HEADERS);
+    return STANDARD_HEADERS;
   }
   
-  if (!headers.includes("A隊員3")) {
-    const idxA2 = headers.indexOf("A隊員2");
+  // 年月欄已存在，檢查是否需要新增 A/B 隊員3 欄位
+  if (!headers.includes("A\u968a\u54e13")) {
+    const idxA2 = headers.indexOf("A\u968a\u54e12");
     if (idxA2 !== -1) {
       sheet.insertColumnAfter(idxA2 + 1);
-      sheet.getRange(1, idxA2 + 2).setValue("A隊員3");
+      sheet.getRange(1, idxA2 + 2).setValue("A\u968a\u54e13");
+      headers = sheet.getDataRange().getValues()[0].map(h => String(h || "").trim());
     }
-    // refresh
-    headers = sheet.getDataRange().getValues()[0];
-    const idxB2 = headers.indexOf("B隊員2");
+  }
+
+  if (!headers.includes("B\u968a\u54e13")) {
+    const idxB2 = headers.indexOf("B\u968a\u54e12");
     if (idxB2 !== -1) {
       sheet.insertColumnAfter(idxB2 + 1);
-      sheet.getRange(1, idxB2 + 2).setValue("B隊員3");
+      sheet.getRange(1, idxB2 + 2).setValue("B\u968a\u54e13");
+      headers = sheet.getDataRange().getValues()[0].map(h => String(h || "").trim());
     }
-    headers = sheet.getDataRange().getValues()[0];
   }
+  
   return headers;
 }
 
@@ -475,9 +540,14 @@ function logicGenerateChasingSchedule(yearMonth, customizedData) {
      }
   }
 
-  // 取得對應寫入 index，為了避免固定欄位踩雷
+  // 建立欄位索引 (trim 防空格)
   const headIdx = {};
-  headers.forEach((h, i) => headIdx[h] = i);
+  headers.forEach((h, i) => headIdx[String(h).trim()] = i);
+  
+  // 防錯檢查：如果找不到「年月」欄，立即失敗並回報明確錯誤
+  if (headIdx["\u5e74\u6708"] === undefined) {
+    return { status: "error", message: "標題列异常：找不到「年月」欄位。目前標題=" + JSON.stringify(headers) };
+  }
 
   customizedData.forEach(p => {
     const rowObj = [];
