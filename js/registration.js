@@ -168,11 +168,11 @@ const Registration = {
             const style = document.createElement("style");
             style.id = "registration-matrix-style";
             style.textContent = `
-                .matrix-table { width: 100%; border-collapse: collapse; text-align: center; }
-                .matrix-table th { padding: 15px; background: rgba(0,0,0,0.2); color: var(--accent); border: 1px solid var(--border); font-size: 1.1rem; }
-                .matrix-table td { padding: 12px; border: 1px solid var(--border); vertical-align: middle; }
+                .matrix-table { width: 100%; min-width: 0 !important; border-collapse: collapse; text-align: center; }
+                .matrix-table th { padding: 8px 5px; background: rgba(0,0,0,0.2); color: var(--accent); border: 1px solid var(--border); font-size: 1rem; }
+                .matrix-table td { padding: 8px 5px; border: 1px solid var(--border); vertical-align: middle; }
                 .player-stack { display: flex; flex-direction: column; gap: 4px; }
-                .p-name { font-weight: 500; font-size: 1rem; color: var(--text-main); }
+                .p-name { font-weight: 500; font-size: 0.9rem; color: var(--text-main); }
                 .player-list { display: flex; flex-wrap: wrap; gap: 8px; }
             `;
             document.head.appendChild(style);

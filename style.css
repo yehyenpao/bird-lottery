@@ -105,6 +105,18 @@ body {
     right: 0;
 }
 
+/* 側邊欄遮罩層 */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 999;
+}
+.sidebar-backdrop.show {
+    display: block;
+}
+
 .sidebar-header {
     display: flex;
     justify-content: space-between;
@@ -286,6 +298,24 @@ td {
     padding: 1rem;
     border-bottom: 1px solid var(--border);
 }
+
+/* 針對特定表格縮小欄寬，避免手機上資料相隔太遠 */
+#results-table { min-width: 500px; }
+#results-table th, #results-table td { padding: 0.5rem; }
+
+#finals-schedule-container table { min-width: 500px; }
+#finals-schedule-container th, #finals-schedule-container td { padding: 0.5rem; }
+
+#tab-points > .card:nth-child(2) table, /* 這是包含「本月手動加分項」的 card */
+#tab-points .pivot-table:first-of-type { min-width: 500px; }
+#tab-points .pivot-table:first-of-type th, 
+#tab-points .pivot-table:first-of-type td { padding: 0.5rem; }
+
+/* 為了防止手機下方書籤功能列/工具列擋住內容，增加統一 padding */
+.content {
+    padding-bottom: 120px;
+}
+
 
 /* 裁判計分頂部資訊條 */
 .referee-meta {

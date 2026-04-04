@@ -63,17 +63,37 @@ document.addEventListener("DOMContentLoaded", () => {
     // 漢堡選單控制
     const menuToggle = document.getElementById("menu-toggle");
     const menuClose = document.getElementById("menu-close");
+    const sidebarBackdrop = document.getElementById("sidebar-backdrop");
     
+    function closeSidebar() {
+        sidebar.classList.remove("show");
+        if(sidebarBackdrop) sidebarBackdrop.classList.remove("show");
+    }
+
     if (menuToggle) {
-        menuToggle.addEventListener("click", () => {
+        menuToggle.addEventListener("click", (e) => {
             sidebar.classList.add("show");
+            if(sidebarBackdrop) sidebarBackdrop.classList.add("show");
+            e.stopPropagation();
         });
     }
     if (menuClose) {
         menuClose.addEventListener("click", () => {
-            sidebar.classList.remove("show");
+            closeSidebar();
         });
     }
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener("click", () => {
+            closeSidebar();
+        });
+    }
+
+    // 在小螢幕點擊任何選單項目都會自動收起
+    navLinks.forEach(link => {
+        link.addEventListener("click", () => {
+            closeSidebar();
+        });
+    });
 
     // 初始化重新整理按鈕
     const refreshBtn = document.getElementById("refresh-all");
