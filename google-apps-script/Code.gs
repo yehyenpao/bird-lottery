@@ -886,14 +886,29 @@ function logicCalculatePoints(yearMonth, manualData) {
     }
   });
 
-  // 套用手動給分 (猜隊, 裁判)
+  // 套用手動給分 (猜隊, 裁判, 包含鳥巢隊設定)
   if (manualData) {
     Object.keys(manualData).forEach(name => {
       if (!playersMap[name]) {
-         playersMap[name] = { name: name, currPts: 0, guessPts: 0, refPts: 0, rrPts: 0, elimPts: 0, totalPts: 0, team: "", area: "", rrRank: "-", elimRank: "-" };
+         playersMap[name] = { 
+           name: name, 
+           currPts: prevBalances[name] || 0, 
+           guessPts: 0, 
+           refPts: 0, 
+           rrPts: 0, 
+           elimPts: 0, 
+           totalPts: 0, 
+           team: manualData[name].team || "", 
+           area: manualData[name].area || "", 
+           rrRank: "-", 
+           elimRank: "-" 
+         };
+      } else {
+         if (manualData[name].team) playersMap[name].team = manualData[name].team;
+         if (manualData[name].area) playersMap[name].area = manualData[name].area;
       }
-      playersMap[name].guessPts = parseInt(manualData[name].guess) || 0;
-      playersMap[name].refPts = parseInt(manualData[name].ref) || 0;
+      playersMap[name].guessPts += parseInt(manualData[name].guess) || 0;
+      playersMap[name].refPts += parseInt(manualData[name].ref) || 0;
     });
   }
 

@@ -374,12 +374,11 @@
                     <h3><i class="fas fa-user-edit"></i> 1. 本月手動加分項</h3>
                     <p class="hint">請輸入每位球員的猜隊積點與裁判積點，輸入完成後點擊後方「統計」按鈕。</p>
                     <div class="table-container">
-                        <table class="pivot-table">
+                        <table class="pivot-table" id="manual-points-table">
                             <thead>
                                 <tr>
-                                    <th>姓名</th>
                                     <th>隊名</th>
-                                    <th>區</th>
+                                    <th>姓名</th>
                                     <th>猜隊積點</th>
                                     <th>裁判積點</th>
                                 </tr>
@@ -388,6 +387,10 @@
                                 <!-- 由 JS 產生輸入框 -->
                             </tbody>
                         </table>
+                        <div style="margin-top: 1rem; text-align: center;">
+                            <button id="btn-add-point-row" class="btn btn-secondary" style="margin-right: 1rem;"><i class="fas fa-plus"></i> 新增一筆</button>
+                            <button id="btn-remove-point-row" class="btn btn-secondary" style="background:var(--danger); border-color:var(--danger);"><i class="fas fa-minus"></i> 刪除一筆</button>
+                        </div>
                     </div>
                 </div>
 
