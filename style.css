@@ -76,7 +76,34 @@ body {
 .header-tools {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
+}
+
+.date-picker-input {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    color: white;
+    padding: 0.5rem 0.8rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+    outline: none;
+    transition: all 0.3s;
+}
+
+.date-picker-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+}
+
+/* 修復 iOS 上跨平台日期選擇器的高度與點擊縮放問題 */
+@media screen and (max-width: 480px) {
+    .date-picker-input {
+        padding: 0.4rem;
+        font-size: 0.9rem;
+    }
 }
 
 .menu-toggle {
@@ -439,10 +466,32 @@ td {
     backdrop-filter: blur(10px);
 }
 
-#btn-swap-sides:hover {
+#btn-swap-sides:hover, .btn-reset:hover {
     background: var(--primary);
     transform: rotate(180deg) scale(1.1);
     border-color: white;
+}
+
+.btn-reset {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 71, 87, 0.6) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+.btn-reset:hover {
+    background: #ff4757 !important;
+    transform: scale(1.1) rotate(-45deg) !important;
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.5);
 }
 
 /* 控制按鈕 */

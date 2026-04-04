@@ -25,9 +25,9 @@ const ChasingReferee = {
     async load() {
         if (window.logDebug) window.logDebug("[CHASING] 正在載入追分賽程...");
         
-        // 抓取 UI 上的年份月份
-        const yearMonthEl = document.getElementById("current-year-month");
-        const yearMonth = yearMonthEl ? yearMonthEl.innerText.trim() : "2026-03";
+        // 抓取 UI 上的日期
+        const dateEl = document.getElementById("current-date");
+        const dateStr = dateEl ? dateEl.value : CONFIG.DEFAULT_DATE;
         
         const select = document.getElementById("chg-referee-select");
         if (select) select.innerHTML = '<option value="">正在載入資料...</option>';
@@ -146,6 +146,16 @@ const ChasingReferee = {
         }
     },
 
+    resetScore() {
+        if (!this.currentMatch) return;
+        if (!confirm("確定要將本場比分歸零嗎？")) return;
+        
+        this.scoreA = 0;
+        this.scoreB = 0;
+        this.updateScoreUI();
+        this.syncScore(); // 同步至雲端
+    },
+
     updateScoreUI() {
         const scoreAEl = document.getElementById("chg-score-a");
         const scoreBEl = document.getElementById("chg-score-b");
@@ -156,13 +166,13 @@ const ChasingReferee = {
     async syncScore(isFinal = false) {
         if (!this.currentMatch) return;
         
-        const yearMonthEl = document.getElementById("current-year-month");
-        const yearMonth = yearMonthEl ? yearMonthEl.innerText.trim() : "2026-03";
+        const dateEl = document.getElementById("current-date");
+        const dateStr = dateEl ? dateEl.value : CONFIG.DEFAULT_DATE;
         const refNameEl = document.getElementById("chg-ref-name");
         const refereeName = refNameEl ? refNameEl.value : "";
         
         const payload = {
-            yearMonth,
+            yearMonth: dateStr,
             round: this.currentMatch.輪次 || this.currentMatch["輪次"], // "11分接力"
             area: this.currentMatch.區 || this.currentMatch["區"],   // "準決賽(1v4)"
             court: this.currentMatch.場地 || this.currentMatch["場地"],

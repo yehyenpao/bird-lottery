@@ -26,7 +26,7 @@
             </div>
             
             <div class="header-tools">
-                <span id="current-year-month">2026-03</span>
+                <input type="date" id="current-date" class="date-picker-input">
                 <button id="refresh-all" class="btn-icon" title="重新整理"><i class="fas fa-sync"></i></button>
                 <div class="menu-toggle" id="menu-toggle">
                     <i class="fas fa-bars"></i>
@@ -304,10 +304,13 @@
                                 </div>
                             </div>
 
-                            <!-- 置中換邊 -->
-                            <div class="swap-action">
+                            <!-- 置中換邊與歸零 -->
+                            <div class="swap-action" style="display:flex; flex-direction:column; gap:15px; align-items:center;">
                                 <button id="btn-chg-swap-sides" onclick="ChasingReferee.swapSides()" title="交換場地">
                                     <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                <button id="btn-chg-reset" onclick="ChasingReferee.resetScore()" title="本場分數歸零" class="btn-reset">
+                                    <i class="fas fa-undo"></i>
                                 </button>
                             </div>
 

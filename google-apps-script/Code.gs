@@ -87,7 +87,7 @@ function handleRequest(e) {
         result = logicClearData(yearMonth, e.parameter.sheet);
         break;
       case "calculatePoints":
-        result = { status: "success", data: logicCalculatePoints(yearMonth, data) };
+        result = logicCalculatePoints(yearMonth, data);
         break;
       case "getPointsRecords":
         result = { status: "success", data: helperGetPointsRecords(yearMonth) };
@@ -140,15 +140,18 @@ function helperGetData(sheetName, yearMonth) {
     // 處理「年月」欄位 - 統一轉為 "yyyy-MM" 字串再比對
     let rYM = ymIdx > -1 ? data[i][ymIdx] : "";
     if (rYM instanceof Date) {
-      rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
+      rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM-dd");
     } else {
-      // 非 Date 時，取前 7 碼 ("2026-03") 防止格式不一致
-      rYM = String(rYM).trim().substring(0, 7);
+      // 非 Date 時，取前 10 碼 ("2026-03-01") 防止格式不一致
+      rYM = String(rYM).trim().substring(0, 10);
     }
     
-    const targetYM = String(yearMonth).trim().substring(0, 7);
+    const targetDate = String(yearMonth).trim();
     
-    if (!yearMonth || rYM === targetYM) {
+    // 如果傳入的是 yyyy-MM-dd，則精確比對；如果只有 yyyy-MM，則比對前 7 碼
+    const isFullDate = targetDate.length === 10;
+    
+    if (!yearMonth || (isFullDate ? rYM === targetDate : rYM.substring(0, 7) === targetDate)) {
       const obj = {};
       headers.forEach((h, idx) => {
         let val = data[i][idx];
@@ -159,7 +162,7 @@ function helperGetData(sheetName, yearMonth) {
         }
         // 處理「年月」欄位：統一輸出為 yyyy-MM 字串
         if (idx === ymIdx && val instanceof Date) {
-          val = Utilities.formatDate(val, CONFIG.TIMEZONE, "yyyy-MM");
+          val = Utilities.formatDate(val, CONFIG.TIMEZONE, "yyyy-MM-dd");
         }
         
         obj[h] = val;
@@ -210,7 +213,14 @@ function helperDebugSheet(sheetName) {
  */
 function logicAddRegistrations(dataList) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(CONFIG.SHEET_REGISTRATION);
+  let sheet = ss.getSheetByName(CONFIG.SHEET_REGISTRATION);
+  
+  // 防呆機制：如果「報名紀錄」分頁不存在，自動建立並加入標題列
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.SHEET_REGISTRATION);
+    sheet.appendRow(["年月", "姓名", "身份", "隊名", "區", "循環名次", "淘汰名次", "循環積分", "淘汰積分"]);
+  }
+
   dataList.forEach(d => {
     // 依序寫入 9 個欄位：
     // 1.年月 | 2.姓名 | 3.身份 | 4.隊名 | 5.區 | 6.循環名次 | 7.淘汰名次 | 8.循環積分 | 9.淘汰積分
@@ -246,8 +256,8 @@ function logicGenerateSchedule(yearMonth) {
     const data = sheet.getDataRange().getValues();
     for (let i = data.length - 1; i >= 1; i--) {
       let rYM = data[i][0];
-      if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, Session.getScriptTimeZone(), "yyyy-MM");
-      if (String(rYM || "").trim() === String(yearMonth).trim()) sheet.deleteRow(i + 1);
+      if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, Session.getScriptTimeZone(), "yyyy-MM-dd");
+      if (String(rYM || "").trim().substring(0, 10) === String(yearMonth).trim().substring(0, 10)) sheet.deleteRow(i + 1);
     }
   }
   
@@ -534,8 +544,8 @@ function logicGenerateChasingSchedule(yearMonth, customizedData) {
   const oldData = sheet.getDataRange().getValues();
   for (let i = oldData.length - 1; i >= 1; i--) {
      let rYM = oldData[i][0];
-     if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
-     if (String(rYM) === String(yearMonth) && String(oldData[i][headers.indexOf("區")]).includes("準決賽")) {
+     if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM-dd");
+     if (String(rYM).substring(0, 10) === String(yearMonth).substring(0, 10) && String(oldData[i][headers.indexOf("區")]).includes("準決賽")) {
          sheet.deleteRow(i + 1);
      }
   }
@@ -591,10 +601,10 @@ function logicUpdateChasingScore(d) {
   
   for (let i = 1; i < rows.length; i++) {
     let rYM = rows[i][headIdx["年月"]];
-    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
+    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM-dd");
     
     // 對齊邏輯：年月 && 輪次 && 區 && 場地
-    if (String(rYM) === String(d.yearMonth) && 
+    if (String(rYM).substring(0, 10) === String(d.yearMonth).substring(0, 10) && 
         rows[i][headIdx["輪次"]] == d.round && 
         rows[i][headIdx["區"]] == d.area && 
         rows[i][headIdx["場地"]] == d.court) {
@@ -643,8 +653,8 @@ function logicGenerateFinals(yearMonth, customizedData) {
   const oldData = sheet.getDataRange().getValues();
   for (let i = oldData.length - 1; i >= 1; i--) {
      let rYM = oldData[i][0];
-     if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
-     if (String(rYM) === String(yearMonth) && (String(oldData[i][headers.indexOf("區")]).includes("冠軍賽") || String(oldData[i][headers.indexOf("區")]).includes("季軍賽"))) {
+     if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM-dd");
+     if (String(rYM).substring(0, 10) === String(yearMonth).substring(0, 10) && (String(oldData[i][headers.indexOf("區")]).includes("冠軍賽") || String(oldData[i][headers.indexOf("區")]).includes("季軍賽"))) {
          sheet.deleteRow(i + 1);
      }
   }
@@ -774,17 +784,49 @@ function logicAutoGroup(yearMonth) {
 function logicCalculatePoints(yearMonth, manualData) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   
-  // 1. 取得上個月份的年数字串 (ex: 2026-02)
-  const d = new Date(yearMonth + "-01");
-  d.setMonth(d.getMonth() - 1);
-  const prevYearMonth = Utilities.formatDate(d, CONFIG.TIMEZONE, "yyyy-MM");
-  
-  // 2. 獲取上個月的所有球員結餘 (目前積點)
-  const prevData = helperGetData(CONFIG.SHEET_POINTS, prevYearMonth);
+  // 1. 取得「距離本日最近且早於本日」的歷史紀錄 (不再限制於上個月)
+  let pSheet = ss.getSheetByName(CONFIG.SHEET_POINTS);
   const prevBalances = {};
-  prevData.forEach(p => {
-    prevBalances[p["姓名"]] = parseInt(p["累積積點"]) || 0;
-  });
+  
+  if (pSheet) {
+    const pData = pSheet.getDataRange().getValues();
+    if (pData.length > 1) {
+      const headers = pData[0];
+      const ymIdx = headers.indexOf("年月");
+      const nameIdx = headers.indexOf("姓名");
+      const totalIdx = headers.indexOf("累積積點");
+      
+      // 找出所有早於 current date 的唯一日期，並由晚到早排序
+      const targetDate = new Date(yearMonth);
+      let latestPrevDate = null;
+      let latestPrevDateStr = "";
+      
+      for (let i = 1; i < pData.length; i++) {
+        let rowDate = pData[i][ymIdx];
+        if (!(rowDate instanceof Date)) rowDate = new Date(rowDate);
+        
+        if (rowDate < targetDate) {
+          if (!latestPrevDate || rowDate > latestPrevDate) {
+            latestPrevDate = rowDate;
+            latestPrevDateStr = Utilities.formatDate(rowDate, CONFIG.TIMEZONE, "yyyy-MM-dd");
+          }
+        }
+      }
+      
+      // 如果找到了最近的歷史日期，抓取該日期的所有最後結餘
+      if (latestPrevDateStr) {
+        for (let i = 1; i < pData.length; i++) {
+          let rowDate = pData[i][ymIdx];
+          const rowDateStr = rowDate instanceof Date ? 
+            Utilities.formatDate(rowDate, CONFIG.TIMEZONE, "yyyy-MM-dd") : String(rowDate).substring(0, 10);
+            
+          if (rowDateStr === latestPrevDateStr) {
+            prevBalances[pData[i][nameIdx]] = parseInt(pData[i][totalIdx]) || 0;
+          }
+        }
+      }
+    }
+  }
 
   // 3. 初始化全體球員字典 mapping
   const playersMap = {}; 
@@ -945,7 +987,7 @@ function logicCalculatePoints(yearMonth, manualData) {
   finalArray.sort((a, b) => b.totalPts - a.totalPts);
 
   // 7. 將結果寫入積點統計表
-  let pSheet = ss.getSheetByName(CONFIG.SHEET_POINTS);
+  pSheet = ss.getSheetByName(CONFIG.SHEET_POINTS);
   if (!pSheet) {
     pSheet = ss.insertSheet(CONFIG.SHEET_POINTS);
   }
@@ -954,8 +996,8 @@ function logicCalculatePoints(yearMonth, manualData) {
   const pData = pSheet.getDataRange().getValues();
   for (let i = pData.length - 1; i >= 1; i--) {
     let rYM = pData[i][0];
-    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
-    if (String(rYM) === String(yearMonth)) pSheet.deleteRow(i + 1);
+    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM-dd");
+    if (String(rYM).substring(0, 10) === String(yearMonth).substring(0, 10)) pSheet.deleteRow(i + 1);
   }
   
   if (pSheet.getLastRow() === 0) {
@@ -1011,9 +1053,9 @@ function helperGetPointsRecords(yearMonth) {
   // 找到對應月分且依照排名排序 (Excel 裡已經排好了)
   for (let i = 1; i < data.length; i++) {
     let rYM = data[i][0];
-    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
+    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM-dd");
     
-    if (String(rYM) === String(yearMonth)) {
+    if (String(rYM).substring(0, 10) === String(yearMonth).substring(0, 10)) {
       const obj = {};
       headers.forEach((h, idx) => {
         obj[h] = data[i][idx];
@@ -1048,7 +1090,7 @@ function helperGetSpecialRecords() {
     headers.forEach((h, idx) => {
       let val = data[i][idx];
       if (idx === 0 && val instanceof Date) {
-        val = Utilities.formatDate(val, CONFIG.TIMEZONE, "yyyy-MM");
+        val = Utilities.formatDate(val, CONFIG.TIMEZONE, "yyyy-MM-dd");
       }
       ob[h] = val;
     });
@@ -1071,8 +1113,8 @@ function logicSaveSpecialRecords(yearMonth, data) {
   const oldData = sheet.getDataRange().getValues();
   for (let i = oldData.length - 1; i >= 1; i--) {
     let rYM = oldData[i][0];
-    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM");
-    if (String(rYM) === String(yearMonth)) {
+    if (rYM instanceof Date) rYM = Utilities.formatDate(rYM, CONFIG.TIMEZONE, "yyyy-MM-dd");
+    if (String(rYM).substring(0, 10) === String(yearMonth).substring(0, 10)) {
       sheet.deleteRow(i + 1);
     }
   }

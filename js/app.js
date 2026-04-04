@@ -95,6 +95,19 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // 初始化日期選擇器與監聽
+    const datePicker = document.getElementById("current-date");
+    if (datePicker) {
+        datePicker.value = CONFIG.DEFAULT_DATE;
+        datePicker.addEventListener("change", () => {
+            const activeLink = document.querySelector(`#${currentNavId} li.active`);
+            if (activeLink) {
+                const activeTab = activeLink.getAttribute("data-tab");
+                loadTabData(activeTab);
+            }
+        });
+    }
+
     // 初始化重新整理按鈕
     const refreshBtn = document.getElementById("refresh-all");
     if (refreshBtn) {

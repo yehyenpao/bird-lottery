@@ -14,13 +14,13 @@ const API = {
      */
     async call(action, data = null) {
         const baseUrl = CONFIG.API_URL.trim();
-        const yearMonthEl = document.getElementById("current-year-month");
-        const currentYM = yearMonthEl ? yearMonthEl.innerText.trim() : CONFIG.YEAR_MONTH;
+        const dateEl = document.getElementById("current-date");
+        const currentDate = dateEl ? dateEl.value : CONFIG.DEFAULT_DATE;
 
         if (window.logDebug) window.logDebug(`[REQ] ${action}...`);
 
         try {
-            let url = `${baseUrl}?action=${action}&yearMonth=${currentYM}`;
+            let url = `${baseUrl}?action=${action}&yearMonth=${currentDate}`;
             let fetchOptions;
             
             if (data) {

@@ -2,8 +2,8 @@ const CONFIG = {
     // 請在此更換為您部署後的 Google Apps Script Web App URL
     API_URL: "https://script.google.com/macros/s/AKfycbylJdE0zrBJkgbjkvXKKCbhQYs2wnrHCTMutJueWPRISeiUcAuQNYBf-Mg5X9-1GEKZ0w/exec",
 
-    // 目前年份月份 (用於篩選資料)
-    YEAR_MONTH: "2026-03",
+    // 目前預設日期 (用於篩選資料)
+    DEFAULT_DATE: new Date().toLocaleDateString('sv'), // yyyy-mm-dd
 
     TEAMS: ["藍鳥隊", "黑鳥隊", "青鳥隊", "粉鳥隊"],
     AREAS: ["猛禽", "小鳥", "鳥蛋"],

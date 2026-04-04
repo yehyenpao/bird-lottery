@@ -295,7 +295,7 @@ const Viewer = {
         try {
             const res = await API.getSpecialRecords();
             if (res && res.data) {
-                const currentYM = document.getElementById("current-year-month").innerText.trim();
+                const currentYM = document.getElementById("current-date").value;
                 const monthData = res.data.filter(r => r["年月"] === currentYM);
                 
                 if (monthData.length === 0) {
