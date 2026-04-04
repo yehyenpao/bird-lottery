@@ -126,8 +126,8 @@ const Viewer = {
         resultsDiv.innerHTML = "<div style='text-align:center; padding: 2rem;'><i class='fas fa-spinner fa-spin fa-2x'></i><br>搜尋中...</div>";
 
         try {
-            const rrData = await API.getSchedule();
-            const chData = await API.getChasingSchedule();
+            const rrData = await API.getSchedule("");
+            const chData = await API.getChasingSchedule("");
             let matches = [];
 
             if (rrData && rrData.data) {

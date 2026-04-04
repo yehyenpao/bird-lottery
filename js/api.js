@@ -12,10 +12,10 @@ const API = {
      *       1) 先 GET 空請求取得 redirect 後的真正 URL
      *       2) 直接 POST 到真正 URL（不再經過 redirect）
      */
-    async call(action, data = null) {
+    async call(action, data = null, yearMonthOverride = null) {
         const baseUrl = CONFIG.API_URL.trim();
         const dateEl = document.getElementById("current-date");
-        const currentDate = dateEl ? dateEl.value : CONFIG.DEFAULT_DATE;
+        const currentDate = yearMonthOverride !== null ? yearMonthOverride : (dateEl ? dateEl.value : CONFIG.DEFAULT_DATE);
 
         if (window.logDebug) window.logDebug(`[REQ] ${action}...`);
 
@@ -95,9 +95,9 @@ const API = {
     },
 
     getRegistrations() { return this.call("getRegistrations"); },
-    getSchedule() { return this.call("getSchedule"); },
-    getLiveScores() { return this.call("getLiveScores"); },
-    getChasingSchedule() { return this.call("getChasingSchedule"); },
+    getSchedule(ym = null) { return this.call("getSchedule", null, ym); },
+    getLiveScores(ym = null) { return this.call("getLiveScores", null, ym); },
+    getChasingSchedule(ym = null) { return this.call("getChasingSchedule", null, ym); },
     getRankings() { return this.call("getRankings"); },
     addRegistrations(items) { return this.call("addRegistrations", items); },
     autoGroup() { return this.call("autoGroup"); },
