@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鳥樂盃電視看板</title>
+    <link rel="stylesheet" href="style.css?v=TV">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error("GLOBAL ERROR:", msg, "at", url, ":", lineNo);
+            return false;
+        };
+        console.log("TV.html: 腳本開始載入...");
+    </script>
+    <style>
+        /* TV Dashboard 特化樣式 */
+        :root {
+            --tv-bg: #0f172a;
+            --tv-text: #f8fafc;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--tv-bg);
+            color: var(--tv-text);
+            overflow: hidden; /* 隱藏全域捲軸 */
+            font-family: 'Noto Sans TC', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+        }
+        
+        /* 避免與 index.html 衝突而覆蓋部分變數 */
+        .card { padding: 1rem; border-radius: 12px; background: rgba(30,30,40,0.8); }
+
+        .tv-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .tv-left {
+            width: 50%;
+            height: 100%;
+            border-right: 2px solid #334155;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .tv-right {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tv-top-right {
+            height: 60%;
+            border-bottom: 2px solid #334155;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            padding: 0.5rem;
+        }
+
+        .tv-bottom-right {
+            height: 40%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            padding: 0.5rem;
+        }
+
+        h2.tv-title {
+            text-align: center;
+            color: var(--primary);
+            margin: 0.2rem 0 0.4rem 0;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* 輪播容器 */
+        .carousel-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .carousel-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .carousel-item.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* 放大表格字體適應大螢幕 */
+        .tv-table-zoom {
+            font-size: 1.1rem;
+            width: 100%;
+            min-width: auto !important;
+            table-layout: fixed;
+        }
+        .tv-table-zoom th, .tv-table-zoom td {
+            padding: 0.5rem 0.3rem !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 更緊湊的表格 (用於右側多欄位) */
+        .tv-table-compact {
+            font-size: 1rem;
+            table-layout: fixed;
+            width: 100%;
+        }
+        .tv-table-compact th, .tv-table-compact td {
+            padding: 0.3rem 0.15rem !important;
+            white-space: normal; /* 允許換行以適應寬度 */
+            word-break: break-all;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 賽程向下滾動容器 */
+        .scroll-wrapper {
+            flex-grow: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        .scroll-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            transition: transform 0.5s linear;
+        }
+
+        /* 活潑且亮眼的表格樣式 */
+        .vibrant-container {
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4), inset 0 0 10px rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(30, 41, 59, 0.4);
+        }
+        
+        .vibrant-table thead tr {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6) !important;
+        }
+        .vibrant-table th {
+            color: #fff !important;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 900;
+        }
+        .vibrant-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .vibrant-table tr:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        /* 決賽與即時比分的亮眼邊框色 */
+        #tv-finals-table-container { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+        #tv-live-table-container { border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="tv-layout">
+        <!-- 左區塊：循環賽程管理表 -->
+        <div class="tv-left">
+            <h2 class="tv-title"><i class="fas fa-calendar-alt"></i> 循環賽程進度</h2>
+            <div class="scroll-wrapper" id="schedule-scroll-wrap">
+                <div class="scroll-content" id="schedule-scroll-content">
+                    <div class="table-container" style="padding: 0 1rem;">
+                        <table class="tv-table-zoom" id="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:12%;">時間</th>
+                                    <th style="width:10%;">序號/輪次</th>
+                                    <th style="width:12%;">區域/場地</th>
+                                    <th style="width:23%;">A隊/隊員</th>
+                                    <th style="width:10%;">比分</th>
+                                    <th style="width:23%;">B隊/隊員</th>
+                                    <th style="width:10%;">狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tv-schedule-tbody">
+                                <!-- 賽程資料 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tv-right">
+            <!-- 右上區塊：預賽統計表、決賽總覽 輪播 -->
+            <div class="tv-top-right">
+                <div class="carousel-container" id="top-right-carousel">
+                    <!-- 輪播 1: 預賽統計表 -->
+                    <div class="carousel-item active" id="tv-slide-stats">
+                        <h2 class="tv-title"><i class="fas fa-chart-bar"></i> 預賽統計排名</h2>
+                        <div class="table-container" style="max-width: 98%; margin: 0 auto;">
+                            <table class="tv-table-zoom tv-table-compact pivot-table" id="tv-stats-table">
+                                <tbody id="tv-stats-tbody">
+                                    <!-- 轉置後的統計資料 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- 輪播 2: 決賽總覽 -->
+                    <div class="carousel-item" id="tv-slide-finals">
+                        <h2 class="tv-title"><i class="fas fa-trophy"></i> 決賽總覽</h2>
+                        <div class="table-container vibrant-container" id="tv-finals-table-container" style="max-width: 98%; margin: 0 auto;">
+                            <table class="tv-table-zoom tv-table-compact vibrant-table" id="tv-finals-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 20%;">區塊</th>
+                                        <th style="width: 10%;">場地</th>
+                                        <th style="width: 22%; text-align:right;">A隊</th>
+                                        <th style="width: 11%; text-align:center;">比分</th>
+                                        <th style="width: 22%; text-align:left;">B隊</th>
+                                        <th style="width: 15%;">狀態</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tv-finals-tbody">
+                                    <!-- 決賽資料 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右下區塊：即時比分 -->
+            <div class="tv-bottom-right">
+                <h2 class="tv-title"><i class="fas fa-tv"></i> 即時比分</h2>
+                <div class="table-container vibrant-container" id="tv-live-table-container" style="max-width: 98%; margin: 0 auto; height: calc(100% - 2rem); overflow-y: auto; overflow-x: hidden;">
+                    <table class="tv-table-zoom tv-table-compact vibrant-table" style="width: 100%;">
+                        <thead>
+                            <tr style="display:none;"> <!-- 隱藏表頭但保留寬度定義 -->
+                                <th style="width: 20%;"></th>
+                                <th style="width: 25%;"></th>
+                                <th style="width: 15%;"></th>
+                                <th style="width: 25%;"></th>
+                                <th style="width: 15%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tv-live-tbody">
+                            <!-- 比分橫欄資料 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入核心共用機制，避免引用過多包含事件綁定的 UI js -->
+    <script src="js/config.js?v=TV"></script>
+    <script src="js/api.js?v=TV"></script>
+    <!-- TV 邏輯 -->
+    <script src="js/tv_dashboard.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>準備迎戰！</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        body {
+            background-color: #0d1117;
+            background-image: radial-gradient(circle at 50% 50%, #201a35 0%, #08070d 80%);
+            color: #fff;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* 魔法星空背景點綴 */
+        .stars {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 160px 120px, #ddd, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            animation: twinkle 5s linear infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes twinkle {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-200px); }
+        }
+
+        /* 角色展示區 */
+        .character-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+
+        .pirate-bird {
+            max-width: 40%;
+            max-height: 30vh;
+            filter: drop-shadow(0 15px 25px rgba(233, 62, 107, 0.4));
+            animation: float 3s ease-in-out infinite;
+            border-radius: 10px; /* 如果圖片非去背，稍微給個圓角 */
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* RPG 對話框 */
+        .dialogue-box {
+            width: 95%;
+            max-width: 1600px;
+            background: rgba(15, 12, 29, 0.85);
+            border: 2px solid #5a3c87;
+            border-radius: 16px;
+            padding: 50px;
+            margin-bottom: 60px;
+            box-shadow: 0 0 30px rgba(90, 60, 135, 0.5), inset 0 0 20px rgba(0,0,0,0.8);
+            position: relative;
+            z-index: 3;
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .dialogue-box:hover {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.6), inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .speaker-name {
+            position: absolute;
+            top: -30px;
+            left: 40px;
+            background: linear-gradient(135deg, #e93e6b 0%, #8b5cf6 100%);
+            padding: 10px 40px;
+            border-radius: 30px;
+            font-size: 2.4rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            box-shadow: 0 5px 15px rgba(233, 62, 107, 0.5);
+            border: 2px solid #fff;
+        }
+
+        .dialogue-text {
+            font-size: 3.2rem;
+            line-height: 1.6;
+            color: #f3f4f6;
+            flex: 1;
+        }
+
+        /* 繼續點擊提示（右下角閃爍小箭頭） */
+        .continue-hint {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            font-size: 1.2rem;
+            color: #a78bfa;
+            animation: blink 1s step-end infinite;
+            display: none;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* 最終「開始迎戰」按鈕 */
+        .btn-wrapper {
+            position: absolute;
+            bottom: -70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            text-align: center;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #0cebeb 0%, #20e3b2 50%, #29ffc6 100%);
+            color: #0b221c;
+            font-size: 1.6rem;
+            font-weight: 900;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(32, 227, 178, 0.5);
+            transition: all 0.3s ease;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+            letter-spacing: 2px;
+            display: none;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            white-space: nowrap;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(32, 227, 178, 0.7);
+        }
+
+        .start-btn:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateY(20px) scale(0.8); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* 響應式優化 */
+        @media (max-width: 768px) {
+            .dialogue-text { font-size: 1.2rem; }
+            .start-btn { font-size: 1.2rem; padding: 12px 30px; }
+            .dialogue-box { min-height: 150px; padding: 20px; }
+            .btn-wrapper { bottom: -60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+
+    <div class="character-container">
+        <!-- 海盜猛禽圖 -->
+        <img src="img/pirate_bird.jpg" alt="海盜猛禽" class="pirate-bird">
+    </div>
+
+    <div class="dialogue-box" id="dialogueBox">
+        <div class="speaker-name">海盜猛禽</div>
+        <div class="dialogue-text" id="typewriterText"></div>
+        <div class="continue-hint" id="continueHint">▼</div>
+        
+        <div class="btn-wrapper">
+            <button class="start-btn" id="startBtn">開始迎戰 (Click to Start)</button>
+        </div>
+    </div>
+
+    <script>
+        const scripts = [
+            "分組已完成，請儘快找到你的隊友！",
+            "你與隊友的戰績將共同決定最後決戰的優先順序，",
+            "因此，你的每一場比賽，也決定團隊之後的走向...",
+            "接下來將顯示你的隊伍目前的對戰順序，",
+            "好好爭取團隊榮譽吧！"
+        ];
+
+        let currentScriptIndex = 0;
+        let isTyping = false;
+        let typingTimer;
+        let autoNextTimer;
+
+        const textElement = document.getElementById("typewriterText");
+        const dialogueBox = document.getElementById("dialogueBox");
+        const continueHint = document.getElementById("continueHint");
+        const startBtn = document.getElementById("startBtn");
+
+        function typeWriter(text, index = 0) {
+            isTyping = true;
+            continueHint.style.display = "none";
+            
+            if (index === 0) {
+                textElement.innerHTML = "";
+                
+                // 語音播放 (男性低沉)
+                if ("speechSynthesis" in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = "zh-TW";
+                    utterance.pitch = 0.1; // 極低沉音調
+                    utterance.rate = 1.0;  // 正常語速
+                    
+                    // 嘗試尋找男聲 (如果系統有提供)
+                    const voices = window.speechSynthesis.getVoices();
+                    const twVoices = voices.filter(v => v.lang.includes('zh-TW') || v.lang.includes('zh-HK') || v.lang.includes('zh-CN'));
+                    // 隨意挑一個，主要靠 pitch 壓低
+                    if (twVoices.length > 0) utterance.voice = twVoices[0];
+                    
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+
+            if (index < text.length) {
+                textElement.innerHTML += text.charAt(index);
+                typingTimer = setTimeout(() => typeWriter(text, index + 1), 60); // 打字機速度
+            } else {
+                isTyping = false;
+                if (currentScriptIndex < scripts.length - 1) {
+                    continueHint.style.display = "none"; // 改為自動播放，隱藏提示小箭頭
+                    autoNextTimer = setTimeout(nextScript, 3000); // 3 秒後自動播放下一句
+                } else {
+                    // 顯示最終按鈕
+                    startBtn.style.display = "inline-block";
+                    dialogueBox.style.cursor = "default";
+                }
+            }
+        }
+
+        function nextScript() {
+            // 已完全結束，不處理點擊
+            if (currentScriptIndex >= scripts.length - 1 && !isTyping) {
+                return;
+            }
+
+            if (isTyping) {
+                // 如果正在打字，點擊則立即顯示完整句子並強制關閉這句的語音
+                clearTimeout(typingTimer);
+                window.speechSynthesis.cancel();
+                textElement.innerHTML = scripts[currentScriptIndex];
+                isTyping = false;
+                
+                if (currentScriptIndex < scripts.length - 1) {
+                    continueHint.style.display = "none";
+                    autoNextTimer = setTimeout(nextScript, 3000);
+                } else {
+                    startBtn.style.display = "inline-block";
+                    dialogueBox.style.cursor = "default";
+                }
+            } else {
+                // 如果打完了，進入下一句
+                clearTimeout(autoNextTimer);
+                currentScriptIndex++;
+                if (currentScriptIndex < scripts.length) {
+                    typeWriter(scripts[currentScriptIndex]);
+                }
+            }
+        }
+
+        // 綁定點擊事件
+        dialogueBox.addEventListener("click", (e) => {
+            if (e.target !== startBtn) {
+                nextScript();
+            }
+        });
+
+        startBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            
+            // 加入淡出效果
+            document.body.style.transition = "opacity 0.6s ease";
+            document.body.style.opacity = "0";
+            
+            setTimeout(() => {
+                // 嘗試關閉視窗 (如果是由 window.open 開啟)
+                try {
+                    // 如果被 iframe 包起來，通知父層去跳轉分頁
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({ action: "closeAndGoToSchedule" }, "*");
+                    } else {
+                        // 當網頁被單獨開啟時的關閉與退回處理
+                        window.history.back(); // 嘗試回到上一頁
+                        window.close(); // 如果是程式開啟的新分頁，可以直接關閉
+                        
+                        // Fallback: 直接導向首頁
+                        if (!window.closed) { 
+                            window.location.href = "index.html"; 
+                        }
+                    }
+                } catch(err) {
+                    window.location.href = "index.html";
+                }
+            }, 600);
+        });
+
+        // 啟動動畫
+        window.onload = () => {
+            setTimeout(() => {
+                typeWriter(scripts[currentScriptIndex]);
+            }, 500); // 延遲半秒開始
+        };
+    </script>
+</body>
+</html>
