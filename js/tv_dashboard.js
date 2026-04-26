@@ -199,18 +199,18 @@ const TVDashboard = {
         }
 
         liveMatches.forEach(m => {
-            const cA = CONFIG.TEAM_COLORS[m["A隊名"]] || "#60a5fa"; // 稍微調亮
-            const cB = CONFIG.TEAM_COLORS[m["B隊名"]] || "#f87171"; // 稍微調亮
+            const cA = CONFIG.TEAM_COLORS[m["A隊名"]] || "#60a5fa"; 
+            const cB = CONFIG.TEAM_COLORS[m["B隊名"]] || "#f87171"; 
 
             html += `
                 <tr style="border-bottom:1px solid rgba(255,255,255,0.1); background: rgba(59, 130, 246, 0.05);">
-                    <td style="width: 20%; color: #94a3b8; font-weight:bold;">${m["場地"] || ""}場 (${m["區"] || ""})</td>
-                    <td style="width: 25%; text-align:right; font-weight:900; color:${cA}; font-size:1.1rem;">${m["A隊名"]}</td>
-                    <td style="width: 15%; text-align:center; font-size:1.6rem; font-weight:900; color:#fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.4);">
+                    <td style="width: 20%; color: #94a3b8; font-weight:bold; font-size:0.8rem; padding: 2px 0;">${m["場地"] || ""}場 (${m["區"] || ""})</td>
+                    <td style="width: 25%; text-align:right; font-weight:900; color:${cA}; font-size:0.9rem; padding: 2px 0;">${m["A隊名"]}</td>
+                    <td style="width: 15%; text-align:center; font-size:1.2rem; font-weight:900; color:#fbbf24; text-shadow: 0 0 8px rgba(251,191,36,0.4); padding: 2px 0;">
                         ${m["A隊比分"] || 0} : ${m["B隊比分"] || 0}
                     </td>
-                    <td style="width: 25%; text-align:left; font-weight:900; color:${cB}; font-size:1.1rem;">${m["B隊名"]}</td>
-                    <td style="width: 15%; color:#34d399; font-size:0.9rem; font-weight:bold;"><i class="fas fa-user-check"></i> ${m["裁判"]||"無"}</td>
+                    <td style="width: 25%; text-align:left; font-weight:900; color:${cB}; font-size:0.9rem; padding: 2px 0;">${m["B隊名"]}</td>
+                    <td style="width: 15%; color:#34d399; font-size:0.75rem; font-weight:bold; padding: 2px 0;"><i class="fas fa-user-check"></i> ${m["裁判"]||"無"}</td>
                 </tr>
             `;
         });
