@@ -1,6 +1,6 @@
 const Points = {
     teamPlayersMap: {},
-    nestPlayers: [],
+    allPlayers: [],
 
     async init() {
         this.bindEvents();
@@ -41,39 +41,47 @@ const Points = {
     async loadParticipants() {
         try {
             const tbody = document.getElementById("manual-points-tbody");
+            const datalist = document.getElementById("all-players-list");
             if (!tbody) return;
             
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> 載入名單資料庫中...</td></tr>';
             
-            // 抓取本次比賽報名成員庫 (取出四隊名單)
+            // 1. 抓取本次比賽報名成員
             const regRes = await API.getRegistrations();
             const registrations = (regRes && regRes.status === "success") ? (regRes.data || []) : [];
             
             this.teamPlayersMap = { "藍鳥隊": [], "黑鳥隊": [], "青鳥隊": [], "粉鳥隊": [] };
-            const currentPlayers = new Set();
+            const registeredNames = new Set();
             
             registrations.forEach(p => {
                 const name = p["姓名"] ? p["姓名"].trim() : "";
                 const team = p["隊名"] ? p["隊名"].trim() : "";
-                if (name) currentPlayers.add(name);
-                if (team && this.teamPlayersMap[team]) {
-                    this.teamPlayersMap[team].push(name);
+                if (name) {
+                    registeredNames.add(name);
+                    if (team && this.teamPlayersMap[team]) {
+                        this.teamPlayersMap[team].push(name);
+                    }
                 }
             });
 
-            // 抓取全體球員庫 (用作鳥巢隊選項)
+            // 2. 抓取全體歷史球員庫
             const dbRes = await API.getPlayersInfo();
-            this.nestPlayers = [];
-            if (dbRes && dbRes.status === "success" && dbRes.data) {
-                Object.keys(dbRes.data).forEach(name => {
-                    const n = name.trim();
-                    if (!currentPlayers.has(n) && n !== "") {
-                        this.nestPlayers.push(n);
-                    }
+            const dbNames = (dbRes && dbRes.status === "success" && dbRes.data) ? Object.keys(dbRes.data) : [];
+            
+            // 合併所有已知的姓名 (去重)
+            this.allPlayers = [...new Set([...registeredNames, ...dbNames])].sort();
+
+            // 3. 更新 datalist 供智慧搜尋使用
+            if (datalist) {
+                datalist.innerHTML = "";
+                this.allPlayers.forEach(name => {
+                    const opt = document.createElement("option");
+                    opt.value = name;
+                    datalist.appendChild(opt);
                 });
             }
 
-            // 清空並預先建立 5 行
+            // 4. 初始化介面
             tbody.innerHTML = "";
             for (let i = 0; i < 5; i++) {
                 this.addManualRow();
@@ -101,39 +109,26 @@ const Points = {
                 </select>
             </td>
             <td>
-                <select class="manual-name" style="width:100%; padding:0.4rem; border-radius:4px; background:rgba(0,0,0,0.3); border:1px solid #666; color:#fff;" disabled>
-                    <option value="">請先選隊名</option>
-                </select>
+                <input type="text" class="manual-name" list="all-players-list" placeholder="輸入姓名或搜尋" style="width:100%; padding:0.4rem; border-radius:4px; background:rgba(0,0,0,0.3); border:1px solid #666; color:#fff;">
             </td>
             <td><input type="number" class="manual-input guess-pts" min="0" placeholder="0" style="width:70px; text-align:center; background: rgba(0,0,0,0.3); color:#fff; border: 1px solid rgba(255,255,255,0.2); border-radius:4px; padding:6px; font-size:1rem;"></td>
             <td><input type="number" class="manual-input ref-pts" min="0" placeholder="0" style="width:70px; text-align:center; background: rgba(0,0,0,0.3); color:#fff; border: 1px solid rgba(255,255,255,0.2); border-radius:4px; padding:6px; font-size:1rem;"></td>
         `;
 
         const teamSelect = tr.querySelector(".manual-team");
-        const nameSelect = tr.querySelector(".manual-name");
+        const nameInput = tr.querySelector(".manual-name");
 
+        // 當切換隊伍時，如果是正式四隊，我們可以協助填入，如果是鳥巢隊則清空讓使用者搜尋
         teamSelect.addEventListener("change", (e) => {
             const team = e.target.value;
-            nameSelect.innerHTML = `<option value="">請選擇姓名</option>`;
-            if (!team) {
-                nameSelect.disabled = true;
-                return;
-            }
-            nameSelect.disabled = false;
+            if (!team) return;
             
-            let players = [];
-            if (team.includes("鳥巢隊")) {
-                players = this.nestPlayers;
-            } else if (this.teamPlayersMap[team]) {
-                players = this.teamPlayersMap[team];
+            // 如果是正式隊伍，我們把原本該隊的人員提示放進 placeholder 或清空
+            if (this.teamPlayersMap[team] && this.teamPlayersMap[team].length > 0) {
+                nameInput.placeholder = `推薦: ${this.teamPlayersMap[team].join(", ")}`;
+            } else if (team === "鳥巢隊") {
+                nameInput.placeholder = "請搜尋或輸入姓名";
             }
-            
-            players.forEach(p => {
-                const opt = document.createElement("option");
-                opt.value = p;
-                opt.innerText = p;
-                nameSelect.appendChild(opt);
-            });
         });
 
         tbody.appendChild(tr);
@@ -156,11 +151,11 @@ const Points = {
             const rows = document.querySelectorAll("#manual-points-tbody tr");
             rows.forEach(tr => {
                 const teamSelect = tr.querySelector(".manual-team");
-                const nameSelect = tr.querySelector(".manual-name");
-                if (!teamSelect || !nameSelect) return;
+                const nameInput = tr.querySelector(".manual-name");
+                if (!teamSelect || !nameInput) return;
 
                 const team = teamSelect.value;
-                const name = nameSelect.value;
+                const name = nameInput.value.trim();
                 const guess = parseInt(tr.querySelector(".guess-pts").value) || 0;
                 const ref = parseInt(tr.querySelector(".ref-pts").value) || 0;
                 
@@ -169,8 +164,8 @@ const Points = {
                         manualData[name] = { 
                             guess: 0, 
                             ref: 0,
-                            team: team.includes("鳥巢隊") ? "鳥巢隊" : team,
-                            area: team.includes("鳥巢隊") ? "外部" : ""
+                            team: team === "鳥巢隊" ? "鳥巢隊" : team,
+                            area: team === "鳥巢隊" ? "外部" : ""
                         };
                     }
                     manualData[name].guess += guess;
@@ -228,7 +223,10 @@ const Points = {
         tbody.innerHTML = html;
         
         setTimeout(() => {
-            document.getElementById("points-record-table").parentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const table = document.getElementById("points-record-table");
+            if (table) table.parentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
     }
 };
+
+window.Points = Points;

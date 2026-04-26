@@ -569,7 +569,7 @@ function helperBuildRoundRobinRankLookup(yearMonth) {
 
   const clean = (value) => String(value || "").replace(/\s+/g, "").trim();
   const stats = {};
-  const allTeams = [...new Set(matches.flatMap(m => [clean(m["A隊名"]), clean(m["B隊名"])])).filter(Boolean)];
+  const allTeams = [...new Set(matches.flatMap(m => [clean(m["A隊名"]), clean(m["B隊名"])]).filter(Boolean))];
   const isLottery = allTeams.length > 4;
 
   matches.forEach(match => {
