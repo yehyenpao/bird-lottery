@@ -413,7 +413,7 @@ function logicGenerateSchedule(yearMonth) {
   }
 
   // 【常規賽】產生邏輯
-  const matchups = [[0, 2], [1, 3], [0, 1], [2, 3], [0, 3], [2, 1]];
+  const matchups = [[0, 2], [1, 3], [0, 1], [2, 3], [0, 3], [1, 2]];
   const roundTimes = ["13:40", "14:05", "14:30", "14:45", "15:00", "15:15"];
   
   // 動態對應場地 (根據關鍵字比對)
