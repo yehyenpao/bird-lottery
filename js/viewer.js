@@ -592,35 +592,40 @@ const Viewer = {
         try {
             const res = await API.getSpecialRecords();
             if (res && res.status === "success" && res.data) {
-                // 優先顯示當月份，若無則顯示最新的一筆
+                // 取得目前選取的年份 (預設為今年)
                 const currentYM = document.getElementById("current-date")?.value || new Date().toISOString().substring(0, 10);
-                let displayData = res.data.filter(r => r["年月"] === currentYM);
+                const currentYear = currentYM.substring(0, 4);
                 
-                // 如果當月沒資料，改顯示所有歷史紀錄中的最新一筆
-                if (displayData.length === 0 && res.data.length > 0) {
-                    const sorted = [...res.data].sort((a, b) => new Date(b["年月"] || 0) - new Date(a["年月"] || 0));
-                    displayData = [sorted[0]];
-                }
+                // 篩選出今年度的所有紀錄
+                let displayData = res.data.filter(r => {
+                    const rDate = r["年月"] || "";
+                    return rDate.startsWith(currentYear);
+                });
+                
+                // 按日期降序排序 (最新的在上面)
+                displayData.sort((a, b) => new Date(b["年月"] || 0) - new Date(a["年月"] || 0));
 
                 if (displayData.length === 0) {
-                    container.innerHTML = "<div class='card' style='text-align:center;'>本月份尚無發布公告。</div>";
+                    container.innerHTML = `<div class='card' style='text-align:center;'>${currentYear} 年度尚無發布公告。</div>`;
                     return;
                 }
 
-                let html = "";
+                let html = `<div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">`;
                 displayData.forEach(r => {
                     const content = r["公佈內容"] || `${r["類型"]}: ${r["姓名"]} ${r["備註"] || ""}`;
                     const date = r["年月"] || "賽事公告";
                     
                     html += `
-                    <div class="card animate-fadeIn" style="padding:1.5rem; text-align:left; border-left: 5px solid var(--primary); background: rgba(59, 130, 246, 0.05);">
-                        <div style="margin-bottom: 1rem; color: var(--accent); font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                    <div class="card animate-fadeIn" style="padding:1.5rem; text-align:left; border-left: 5px solid var(--primary); background: rgba(59, 130, 246, 0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                        <div style="margin-bottom: 1rem; color: var(--accent); font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
                             <span><i class="fas fa-bullhorn"></i> ${date} 賽事公佈欄</span>
+                            <span style="font-size: 0.8rem; background: var(--primary); color: white; padding: 2px 8px; border-radius: 20px; opacity: 0.8;"># 年度紀錄</span>
                         </div>
-                        <div style="white-space: pre-wrap; font-size: 1.2rem; line-height: 1.8; color: white;">${content}</div>
+                        <div style="white-space: pre-wrap; font-size: 1.1rem; line-height: 1.8; color: white;">${content}</div>
                     </div>
                     `;
                 });
+                html += `</div>`;
                 container.innerHTML = html;
             } else {
                 container.innerHTML = "<div class='card' style='text-align:center;'>目前暫無公告內容。</div>";
