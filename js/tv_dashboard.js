@@ -93,12 +93,12 @@ const TVDashboard = {
                         <div style="font-weight:bold;">${m["區"] || ""}</div>
                         <div style="font-size:0.8rem; color:var(--text-dim);">${m["場地"] || ""}場</div>
                     </td>
-                    <td style="text-align:right; padding-right:10px;">
+                    <td style="text-align:right; padding-right:4px;">
                         <div style="font-weight:bold; color:#fff;">${m["A隊名"]}</div>
                         <div style="font-size:0.8rem; color:var(--text-dim);">${playersA}</div>
                     </td>
-                    <td style="text-align:center; font-weight:bold; color:var(--accent); font-size:1.2rem;">${m["A隊比分"] || 0} : ${m["B隊比分"] || 0}</td>
-                    <td style="text-align:left; padding-left:10px;">
+                    <td style="text-align:center; font-weight:bold; color:var(--accent); font-size:0.9rem;">${m["A隊比分"] || 0} : ${m["B隊比分"] || 0}</td>
+                    <td style="text-align:left; padding-left:4px;">
                         <div style="font-weight:bold; color:#fff;">${m["B隊名"]}</div>
                         <div style="font-size:0.8rem; color:var(--text-dim);">${playersB}</div>
                     </td>
