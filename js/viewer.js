@@ -587,39 +587,46 @@ const Viewer = {
     async loadSpecial() {
         const container = document.getElementById("v-special-container");
         if (!container) return;
-        container.innerHTML = "<div style='text-align:center;'>載入中...</div>";
+        container.innerHTML = "<div style='text-align:center;'><i class='fas fa-spinner fa-spin'></i> 載入中...</div>";
 
         try {
             const res = await API.getSpecialRecords();
-            if (res && res.data) {
-                const currentYM = document.getElementById("current-date").value;
-                const monthData = res.data.filter(r => r["年月"] === currentYM);
+            if (res && res.status === "success" && res.data) {
+                // 優先顯示當月份，若無則顯示最新的一筆
+                const currentYM = document.getElementById("current-date")?.value || new Date().toISOString().substring(0, 10);
+                let displayData = res.data.filter(r => r["年月"] === currentYM);
                 
-                if (monthData.length === 0) {
-                    container.innerHTML = "<div class='card' style='text-align:center;'>本月份尚無發布特殊紀錄。</div>";
+                // 如果當月沒資料，改顯示所有歷史紀錄中的最新一筆
+                if (displayData.length === 0 && res.data.length > 0) {
+                    const sorted = [...res.data].sort((a, b) => new Date(b["年月"] || 0) - new Date(a["年月"] || 0));
+                    displayData = [sorted[0]];
+                }
+
+                if (displayData.length === 0) {
+                    container.innerHTML = "<div class='card' style='text-align:center;'>本月份尚無發布公告。</div>";
                     return;
                 }
 
                 let html = "";
-                monthData.forEach(r => {
-                    let iconHtml = ``;
-                    if (r["類型"] === "禽王") iconHtml = `<i class="fas fa-crown" style="color:var(--raptor); font-size:2rem; float:right;"></i>`;
-                    else if (r["類型"] === "鳥王") iconHtml = `<i class="fas fa-crown" style="color:var(--birdie); font-size:2rem; float:right;"></i>`;
-                    else if (r["類型"] === "蛋王") iconHtml = `<i class="fas fa-crown" style="color:var(--egg); font-size:2rem; float:right;"></i>`;
-                    else if (r["類型"] === "追分王") iconHtml = `<i class="fas fa-bolt" style="color:gold; font-size:2rem; float:right;"></i>`;
-
+                displayData.forEach(r => {
+                    const content = r["公佈內容"] || `${r["類型"]}: ${r["姓名"]} ${r["備註"] || ""}`;
+                    const date = r["年月"] || "賽事公告";
+                    
                     html += `
-                    <div class="card" style="padding:1.5rem; text-align:left; border-left: 4px solid var(--primary);">
-                        ${iconHtml}
-                        <h3 style="color:var(--text-dim); margin-bottom:1rem; font-size:1.5rem;">${r["類型"]}</h3>
-                        <div style="font-size:1.8rem; font-weight:bold; color:white; margin-bottom:0.5rem;">${r["姓名"]}</div>
-                        ${r["備註"] ? `<div style="color:var(--accent); font-size:1.1rem;"><i class="fas fa-info-circle"></i> ${r["備註"]}</div>` : ''}
+                    <div class="card animate-fadeIn" style="padding:1.5rem; text-align:left; border-left: 5px solid var(--primary); background: rgba(59, 130, 246, 0.05);">
+                        <div style="margin-bottom: 1rem; color: var(--accent); font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                            <span><i class="fas fa-bullhorn"></i> ${date} 賽事公佈欄</span>
+                        </div>
+                        <div style="white-space: pre-wrap; font-size: 1.2rem; line-height: 1.8; color: white;">${content}</div>
                     </div>
                     `;
                 });
                 container.innerHTML = html;
+            } else {
+                container.innerHTML = "<div class='card' style='text-align:center;'>目前暫無公告內容。</div>";
             }
         } catch(e) {
+            console.error("Viewer loadSpecial error:", e);
             container.innerHTML = "<div style='text-align:center;'>載入錯誤</div>";
         }
     }

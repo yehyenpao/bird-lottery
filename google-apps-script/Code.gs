@@ -1491,16 +1491,26 @@ function helperGetSpecialRecords() {
 }
 
 /**
- * 儲存特殊紀錄
+ * 儲存公佈欄紀錄 (原特殊紀錄)
  */
 function logicSaveSpecialRecords(yearMonth, data) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(CONFIG.SHEET_SPECIAL);
+  
+  // 若工作表不存在，則重新建立新格式
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.SHEET_SPECIAL);
-    sheet.appendRow(["年月", "類型", "姓名", "備註"]);
+    sheet.appendRow(["年月", "公佈內容"]);
+  } else {
+    // 檢查標題是否為舊格式，如果是則重置為新格式
+    const headers = sheet.getDataRange().getValues()[0];
+    if (headers && headers.includes("類型")) {
+      sheet.clear();
+      sheet.appendRow(["年月", "公佈內容"]);
+    }
   }
 
+  // 刪除該月舊資料
   const oldData = sheet.getDataRange().getValues();
   for (let i = oldData.length - 1; i >= 1; i--) {
     let rYM = oldData[i][0];
@@ -1510,12 +1520,12 @@ function logicSaveSpecialRecords(yearMonth, data) {
     }
   }
 
-  if (data.qName) sheet.appendRow([yearMonth, "禽王", data.qName, data.qNote || ""]);
-  if (data.bName) sheet.appendRow([yearMonth, "鳥王", data.bName, data.bNote || ""]);
-  if (data.eName) sheet.appendRow([yearMonth, "蛋王", data.eName, data.eNote || ""]);
-  if (data.cName) sheet.appendRow([yearMonth, "追分王", data.cName, data.cNote || ""]);
+  // 寫入新公佈內容
+  if (data && data.content) {
+    sheet.appendRow([yearMonth, data.content]);
+  }
 
-  return { status: "success", message: "特殊紀錄已成功發布！" };
+  return { status: "success", message: "公佈欄內容已成功發布！" };
 }
 
 /**

@@ -123,7 +123,7 @@ const API = {
     calculatePoints(manualData) { return this.call("calculatePoints", manualData); },
     getPointsRecords() { return this.call("getPointsRecords"); },
     getSpecialRecords() { return this.call("getSpecialRecords"); },
-    saveSpecialRecords(data) { return this.call("saveSpecialRecords", data); },
+    saveSpecialRecords(data, ym = null) { return this.call("saveSpecialRecords", data, ym); },
     getPlayersInfo() { return this.call("getPlayersInfo"); },
     uploadPhoto(data) { return this.call("uploadPhoto", data); },
     generateLotteryKnockout(data) { return this.call("generateLotteryKnockout", data); }
