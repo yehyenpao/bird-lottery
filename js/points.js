@@ -118,17 +118,28 @@ const Points = {
         const teamSelect = tr.querySelector(".manual-team");
         const nameInput = tr.querySelector(".manual-name");
 
-        // 當切換隊伍時，如果是正式四隊，我們可以協助填入，如果是鳥巢隊則清空讓使用者搜尋
-        teamSelect.addEventListener("change", (e) => {
-            const team = e.target.value;
-            if (!team) return;
-            
-            // 如果是正式隊伍，我們把原本該隊的人員提示放進 placeholder 或清空
-            if (this.teamPlayersMap[team] && this.teamPlayersMap[team].length > 0) {
-                nameInput.placeholder = `推薦: ${this.teamPlayersMap[team].join(", ")}`;
-            } else if (team === "鳥巢隊") {
-                nameInput.placeholder = "請搜尋或輸入姓名";
+        // 當輸入框獲得焦點時，根據該列選擇的隊伍動態更新建議清單
+        nameInput.addEventListener("focus", () => {
+            const team = teamSelect.value;
+            const datalist = document.getElementById("all-players-list");
+            if (!datalist) return;
+
+            datalist.innerHTML = "";
+            let suggestions = [];
+
+            if (team && team !== "鳥巢隊" && this.teamPlayersMap[team]) {
+                // 如果選了正式隊伍，只顯示該隊成員
+                suggestions = this.teamPlayersMap[team];
+            } else {
+                // 如果選了鳥巢隊或未選，顯示所有歷史球員
+                suggestions = this.allPlayers;
             }
+
+            suggestions.forEach(name => {
+                const opt = document.createElement("option");
+                opt.value = name;
+                datalist.appendChild(opt);
+            });
         });
 
         tbody.appendChild(tr);
