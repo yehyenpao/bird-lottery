@@ -95,7 +95,7 @@ const API = {
         }
     },
 
-    getRegistrations() { return this.call("getRegistrations"); },
+    getRegistrations(ym = null) { return this.call("getRegistrations", null, ym); },
     getSchedule(ym = null) { return this.call("getSchedule", null, ym); },
     getLiveScores(ym = null) { return this.call("getLiveScores", null, ym); },
     getChasingSchedule(ym = null) { return this.call("getChasingSchedule", null, ym); },

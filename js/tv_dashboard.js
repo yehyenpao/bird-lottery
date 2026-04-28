@@ -1,5 +1,5 @@
 const TVDashboard = {
-    carousels: ['tv-slide-stats', 'tv-slide-finals'],
+    carousels: ['tv-slide-stats', 'tv-slide-finals', 'tv-slide-registration'],
     currentCarouselIdx: 0,
     scrollInterval: null,
     refreshInterval: null,
@@ -47,20 +47,23 @@ const TVDashboard = {
         const dateToUse = this.targetDate;
         console.log("TV Dashboard: Loading data for", dateToUse);
         try {
-            const [scheduleRes, chasingRes, rankingsRes] = await Promise.all([
+            const [scheduleRes, chasingRes, rankingsRes, regRes] = await Promise.all([
                 API.getSchedule(dateToUse),
                 API.getChasingSchedule(dateToUse),
-                API.getRankings(dateToUse)
+                API.getRankings(dateToUse),
+                API.getRegistrations(dateToUse)
             ]);
-
+            
             const matches = (scheduleRes && scheduleRes.status === "success") ? (scheduleRes.data || []) : [];
             const chasingMatches = (chasingRes && chasingRes.status === "success") ? (chasingRes.data || []) : [];
             const rankings = (rankingsRes && rankingsRes.status === "success") ? (rankingsRes.data || []) : [];
+            const regData = (regRes && regRes.status === "success") ? (regRes.data || []) : [];
 
             this.renderSchedule(matches);
             this.renderStats(rankings);
             this.renderLiveScores(matches.concat(chasingMatches));
             this.renderFinals(chasingMatches);
+            this.renderRegistration(regData);
             
         } catch (err) {
             console.error("TV Dashboard 載入資料失敗:", err);
@@ -251,6 +254,68 @@ const TVDashboard = {
             `;
         });
         tbody.innerHTML = html;
+    },
+
+    renderRegistration(data) {
+        const container = document.getElementById("tv-reg-container");
+        if (!container) return;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding: 2rem; color:#94a3b8;">尚無報名資料</div>`;
+            return;
+        }
+
+        // 動態偵測資料內的隊列與區域 (邏輯複刻自 registration.js)
+        const dataTeams = [...new Set(data.map(p => String(p.隊名 || "").trim()).filter(t => t))];
+        const dataAreas = [...new Set(data.map(p => String(p.區 || p.區別 || "").replace("區", "").trim()).filter(a => a))];
+        
+        const areas = dataAreas.length > 0 
+            ? dataAreas 
+            : CONFIG.AREAS.map(a => a.replace("區", ""));
+            
+        const teams = dataTeams.length > 0 
+            ? dataTeams 
+            : CONFIG.TEAMS;
+
+        let html = `
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th style="min-width: 80px;">隊名 \\ 區</th>
+                        ${areas.map(area => `<th>${area}</th>`).join("")}
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        teams.forEach(team => {
+            const teamColor = CONFIG.TEAM_COLORS[team] || "#60a5fa";
+            html += `<tr><td style="color: ${teamColor}; font-weight: bold; border-right: 1px solid rgba(255,255,255,0.1);">${team}</td>`;
+
+            areas.forEach(area => {
+                const cleanArea = area.replace("區", "");
+                const cellPlayers = data.filter(p => {
+                    const pTeam = String(p.隊名 || "").trim();
+                    const pArea = String(p.區 || p.區別 || "").replace("區", "");
+                    return pTeam === team && pArea === cleanArea;
+                });
+
+                html += `
+                    <td>
+                        <div class="player-stack">
+                            ${cellPlayers.length > 0 ? 
+                                cellPlayers.map(p => `<div class="p-name">${p.姓名}</div>`).join("") : 
+                                "<span style='opacity:0.2'>-</span>"
+                            }
+                        </div>
+                    </td>
+                `;
+            });
+            html += `</tr>`;
+        });
+
+        html += `</tbody></table>`;
+        container.innerHTML = html;
     },
 
     startCarousel() {

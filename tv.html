@@ -178,6 +178,13 @@
         /* 決賽與即時比分的亮眼邊框色 */
         #tv-finals-table-container { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
         #tv-live-table-container { border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+
+        /* 報名分組矩陣表樣式 (TV 特化) */
+        .matrix-table { width: 100%; border-collapse: collapse; text-align: center; background: rgba(30, 41, 59, 0.4); border-radius: 8px; overflow: hidden; }
+        .matrix-table th { padding: 8px 4px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(255,255,255,0.1); font-size: 1rem; }
+        .matrix-table td { padding: 6px 4px; border: 1px solid rgba(255,255,255,0.1); vertical-align: middle; }
+        .player-stack { display: flex; flex-direction: column; gap: 4px; }
+        .p-name { font-weight: 500; font-size: 0.95rem; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -243,6 +250,13 @@
                                     <!-- 決賽資料 -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                    <!-- 輪播 3: 報名分組名單 -->
+                    <div class="carousel-item" id="tv-slide-registration">
+                        <h2 class="tv-title"><i class="fas fa-users"></i> 報名分組名單</h2>
+                        <div class="table-container" id="tv-reg-container" style="max-width: 98%; margin: 0 auto; overflow-x: auto;">
+                            <!-- 報名矩陣表格將由 JS 生成 -->
                         </div>
                     </div>
                 </div>
