@@ -219,7 +219,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (menuToggle) {
         menuToggle.addEventListener("click", (e) => {
             sidebar.classList.add("show");
-            if(sidebarBackdrop) sidebarBackdrop.classList.remove("show");
+            if(sidebarBackdrop) sidebarBackdrop.classList.add("show");
             e.stopPropagation();
         });
     }
