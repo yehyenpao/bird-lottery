@@ -635,4 +635,99 @@ const Viewer = {
             container.innerHTML = "<div style='text-align:center;'>載入錯誤</div>";
         }
     }
+    async loadRegistration() {
+        const container = document.getElementById("v-reg-list-container");
+        if (!container) return;
+        container.innerHTML = "<div style='text-align:center; padding: 2rem;'><i class='fas fa-spinner fa-spin fa-2x'></i><br>載入名單中...</div>";
+
+        try {
+            const res = await API.getRegistrations();
+            if (res && res.status === "success") {
+                this.renderRegistration(res.data);
+            } else {
+                this.renderRegistration([]);
+            }
+        } catch (e) {
+            console.error("Viewer loadRegistration error:", e);
+            container.innerHTML = "<div class='card' style='text-align:center; color:red;'>讀取失敗，請稍後再試</div>";
+        }
+    },
+
+    renderRegistration(data) {
+        const container = document.getElementById("v-reg-list-container");
+        if (!container || !data || data.length === 0) {
+            container.innerHTML = `
+                <div class="card" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+                    <i class="fas fa-users-slash" style="font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.3;"></i>
+                    <p>目前尚無報名分組資料。</p>
+                </div>`;
+            return;
+        }
+
+        const dataTeams = [...new Set(data.map(p => String(p.隊名 || "").trim()).filter(t => t))];
+        const dataAreas = [...new Set(data.map(p => String(p.區 || p.區別 || "").replace("區", "").trim()).filter(a => a))];
+        
+        const areas = dataAreas.length > 0 ? dataAreas : CONFIG.AREAS.map(a => a.replace("區", ""));
+        const teams = dataTeams.length > 0 ? dataTeams : CONFIG.TEAMS;
+
+        let html = `
+            <div class="card animate-fadeIn" style="overflow-x: auto; padding: 0;">
+                <table class="matrix-table" style="width: 100%; border-collapse: collapse; text-align: center;">
+                    <thead>
+                        <tr>
+                            <th style="background: rgba(255,255,255,0.05); min-width: 100px; padding: 12px 8px; border: 1px solid var(--border); color: var(--accent);">隊名 \\ 區</th>
+                            ${areas.map(area => `<th style="padding: 12px 8px; border: 1px solid var(--border);">${area}</th>`).join("")}
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        teams.forEach(team => {
+            const teamColor = CONFIG.TEAM_COLORS[team] || "var(--text-main)";
+            html += `
+                <tr>
+                    <td style="color: ${teamColor}; font-weight: bold; border: 1px solid var(--border); background: rgba(0,0,0,0.1);">
+                        ${team}
+                    </td>
+            `;
+
+            areas.forEach(area => {
+                const cleanArea = area.replace("區", "");
+                const cellPlayers = data.filter(p => {
+                    const pTeam = String(p.隊名 || "").trim();
+                    const pArea = String(p.區 || p.區別 || "").replace("區", "");
+                    return pTeam === team && pArea === cleanArea;
+                });
+
+                html += `
+                    <td style="border: 1px solid var(--border); padding: 10px 5px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            ${cellPlayers.length > 0 ? 
+                                cellPlayers.map(p => `<div style="font-weight: 500; font-size: 0.95rem; color: white;">${p.姓名}</div>`).join("") : 
+                                "<span style='opacity:0.2'>-</span>"
+                            }
+                        </div>
+                    </td>
+                `;
+            });
+            html += `</tr>`;
+        });
+
+        html += `</tbody></table></div>`;
+
+        // 顯示「未分配」人員
+        const unassigned = data.filter(p => !p.隊名 || p.隊名.trim() === "");
+        if (unassigned.length > 0) {
+            html += `
+                <div class="card animate-fadeIn" style="margin-top: 1.5rem; border: 1px dashed var(--border);">
+                    <h4 style="color: var(--text-dim); margin-bottom: 0.8rem;"><i class="fas fa-clock"></i> 尚未分組人員 (${unassigned.length})</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${unassigned.map(p => `<span class="player-tag">${p.姓名} (${(p.區 || "").replace("區", "")})</span>`).join("")}
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+    }
 };

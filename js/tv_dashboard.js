@@ -281,8 +281,8 @@ const TVDashboard = {
             <table class="matrix-table">
                 <thead>
                     <tr>
-                        <th style="min-width: 80px;">隊名 \\ 區</th>
-                        ${areas.map(area => `<th>${area}</th>`).join("")}
+                        <th style="width: 18%;">隊名</th>
+                        ${areas.map(area => `<th style="width: ${ (82/areas.length).toFixed(1) }%;">${area}</th>`).join("")}
                     </tr>
                 </thead>
                 <tbody>

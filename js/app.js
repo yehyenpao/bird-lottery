@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         navUmpire.style.display = 'none';
         navViewer.style.display = 'block';
         roleBadge.innerText = '球友端';
-        initialTab = 'v-schedule';
+        initialTab = 'v-registration';
     }
 
     // 初始化分頁切換
@@ -336,6 +336,9 @@ function loadTabData(tabId, silent = false) {
             break;
 
         // Viewer Tabs
+        case "v-registration":
+            if (typeof Viewer !== "undefined") Viewer.loadRegistration();
+            break;
         case "v-schedule":
             if (typeof Viewer !== "undefined") Viewer.loadSchedule(silent);
             break;

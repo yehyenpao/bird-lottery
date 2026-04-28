@@ -21,7 +21,7 @@
             <div class="logo">
                 <i class="fas fa-shuttlecock"></i>
                 <div class="logo-text">
-                    <span class="brand-name">嘰嘰喳喳</span><span class="sub-brand">鳥樂賽</span><span class="version-badge" style="font-size: 0.7rem; background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; opacity: 0.8;">v75</span>
+                    <span class="brand-name">嘰嘰喳喳</span><span class="sub-brand">鳥樂賽</span><span class="version-badge" style="font-size: 0.7rem; background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; opacity: 0.8;">v76</span>
                 </div>
             </div>
             
@@ -64,7 +64,8 @@
 
             <!-- 球友端選單 -->
             <ul class="nav-links" id="nav-viewer" style="display:none;">
-                <li class="active" data-tab="v-schedule"><i class="fas fa-calendar-alt"></i> 賽程查詢</li>
+                <li class="active" data-tab="v-registration"><i class="fas fa-users"></i> 本日分組清單</li>
+                <li data-tab="v-schedule"><i class="fas fa-calendar-alt"></i> 賽程查詢</li>
                 <li data-tab="livescore"><i class="fas fa-tv"></i> 即時比分</li>
                 <li data-tab="v-history"><i class="fas fa-history"></i> 比賽紀錄查詢</li>
                 <li data-tab="v-points"><i class="fas fa-coins"></i> 積點排名與查詢</li>
@@ -563,6 +564,17 @@
                     </button>
                     <!-- 用於壓縮的隱藏 canvas -->
                     <canvas id="photo-canvas" style="display: none;"></canvas>
+                </div>
+            </section>
+
+            <!-- 球友端: 本日分組清單 -->
+            <section id="tab-v-registration" class="tab-content">
+                <div class="results-header">
+                    <h2><i class="fas fa-users"></i> 本日分組清單 (報名表)</h2>
+                    <p class="hint">可在此確認今日所有參賽者的隊伍分組與技能分區。</p>
+                </div>
+                <div class="data-grid" id="v-reg-list-container">
+                    <!-- 分組結果將由 JS 生成 -->
                 </div>
             </section>
 
