@@ -634,14 +634,17 @@ const Viewer = {
             console.error("Viewer loadSpecial error:", e);
             container.innerHTML = "<div style='text-align:center;'>載入錯誤</div>";
         }
-    }
+    },
     async loadRegistration() {
         const container = document.getElementById("v-reg-list-container");
         if (!container) return;
         container.innerHTML = "<div style='text-align:center; padding: 2rem;'><i class='fas fa-spinner fa-spin fa-2x'></i><br>載入名單中...</div>";
 
+        const datePicker = document.getElementById("current-date");
+        const dateToUse = datePicker ? datePicker.value : null;
+
         try {
-            const res = await API.getRegistrations();
+            const res = await API.getRegistrations(dateToUse);
             if (res && res.status === "success") {
                 this.renderRegistration(res.data);
             } else {

@@ -2306,3 +2306,12 @@ input:checked + .slider-ui:before { transform: translateX(18px); }
     .broadcast-card .broadcast-team-name { font-size: 2.2rem; }
     .broadcast-card .broadcast-score { font-size: 5rem; min-width: 140px; }
 }
+
+/* 報名分組矩陣表樣式 (通用) */
+.matrix-table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: center; background: rgba(30, 41, 59, 0.4); border-radius: 8px; overflow: hidden; font-size: 0.9rem; margin: 1rem 0; border: 1px solid var(--border); }
+.matrix-table th { padding: 12px 8px; background: rgba(59, 130, 246, 0.15); color: var(--primary); border: 1px solid var(--border); font-weight: bold; }
+.matrix-table td { padding: 10px 5px; border: 1px solid var(--border); vertical-align: middle; }
+.player-stack { display: flex; flex-direction: column; gap: 6px; }
+.p-name { font-weight: 500; font-size: 0.95rem; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+.player-tag { display: inline-block; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; border: 1px solid var(--border); }
+
