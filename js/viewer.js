@@ -675,11 +675,15 @@ const Viewer = {
 
         let html = `
             <div class="card animate-fadeIn" style="overflow-x: auto; padding: 0;">
-                <table class="matrix-table" style="width: 100%; border-collapse: collapse; text-align: center;">
+                <table class="matrix-table">
+                    <colgroup>
+                        <col style="width: 18%;">
+                        ${areas.map(() => `<col style="width: ${82 / areas.length}%;">`).join("")}
+                    </colgroup>
                     <thead>
                         <tr>
-                            <th style="background: rgba(255,255,255,0.05); min-width: 100px; padding: 12px 8px; border: 1px solid var(--border); color: var(--accent);">隊名 \\ 區</th>
-                            ${areas.map(area => `<th style="padding: 12px 8px; border: 1px solid var(--border);">${area}</th>`).join("")}
+                            <th style="background: rgba(255,255,255,0.05); color: var(--accent);">隊名 \\ 區</th>
+                            ${areas.map(area => `<th>${area}</th>`).join("")}
                         </tr>
                     </thead>
                     <tbody>
@@ -689,7 +693,7 @@ const Viewer = {
             const teamColor = CONFIG.TEAM_COLORS[team] || "var(--text-main)";
             html += `
                 <tr>
-                    <td style="color: ${teamColor}; font-weight: bold; border: 1px solid var(--border); background: rgba(0,0,0,0.1);">
+                    <td style="color: ${teamColor}; font-weight: bold; background: rgba(0,0,0,0.1);">
                         ${team}
                     </td>
             `;
@@ -703,10 +707,10 @@ const Viewer = {
                 });
 
                 html += `
-                    <td style="border: 1px solid var(--border); padding: 10px 5px;">
-                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <td>
+                        <div class="player-stack">
                             ${cellPlayers.length > 0 ? 
-                                cellPlayers.map(p => `<div style="font-weight: 500; font-size: 0.95rem; color: white;">${p.姓名}</div>`).join("") : 
+                                cellPlayers.map(p => `<div class="p-name">${p.姓名}</div>`).join("") : 
                                 "<span style='opacity:0.2'>-</span>"
                             }
                         </div>
