@@ -676,10 +676,6 @@ const Viewer = {
         let html = `
             <div class="card animate-fadeIn" style="overflow-x: auto; padding: 0;">
                 <table class="matrix-table">
-                    <colgroup>
-                        <col style="width: 18%;">
-                        ${areas.map(() => `<col style="width: ${82 / areas.length}%;">`).join("")}
-                    </colgroup>
                     <thead>
                         <tr>
                             <th style="background: rgba(255,255,255,0.05); color: var(--accent);">隊名 \\ 區</th>
