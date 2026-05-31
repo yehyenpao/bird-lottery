@@ -1238,7 +1238,9 @@ function logicCalculatePoints(yearMonth, manualData) {
     "猛禽": { win: 100, lose: 50 }, "猛禽區": { win: 100, lose: 50 },
     "小鳥": { win: 80, lose: 40 }, "小鳥區": { win: 80, lose: 40 },
     "鳥蛋": { win: 60, lose: 30 }, "鳥蛋區": { win: 60, lose: 30 },
-    "孵蛋": { win: 80, lose: 40 }, "狐狸": { win: 90, lose: 45 }, "醬板鴨": { win: 70, lose: 35 }
+    "孵蛋": { win: 80, lose: 40 }, "狐狸": { win: 90, lose: 45 }, "醬板鴨": { win: 70, lose: 35 },
+    "男雙": { win: 100, lose: 50 },  // 男雙賽程：勝+100 敗+50（含決賽）
+    "女雙": { win: 50, lose: 25 }    // 女雙賽程：砍半 勝+50 敗+25
   };
   
   rrMatches.forEach(m => {
@@ -1251,10 +1253,13 @@ function logicCalculatePoints(yearMonth, manualData) {
     
     // 判斷是否為鳥樂賽 (場地關鍵字)
     const isLottery = area.includes("場");
+    // 判斷是否為男雙/女雙特別賽 (不受官方隊伍限制)
+    const isGenderDouble = area.includes("男雙") || area.includes("女雙");
+    
     if (isLottery) {
         ptsCfg = { win: 100, lose: 50 };
     } else {
-        // 常規區模糊匹配
+        // 常規區模糊匹配 (含男雙/女雙)
         const key = Object.keys(areaPoints).find(k => area.includes(k));
         ptsCfg = areaPoints[key] || { win: 0, lose: 0 };
     }
@@ -1266,12 +1271,13 @@ function logicCalculatePoints(yearMonth, manualData) {
     const teamBPlayers = [m["B隊員1"], m["B隊員2"]].filter(p => p && p !== "待定");
 
     teamAPlayers.forEach(p => {
-      if (playersMap[p] && (isLottery || officialTeams.includes(playersMap[p].team))) {
+      // 男雙/女雙特別賽不受官方四隊限制
+      if (playersMap[p] && (isLottery || isGenderDouble || officialTeams.includes(playersMap[p].team))) {
         playersMap[p].rrPts += aPts;
       }
     });
     teamBPlayers.forEach(p => {
-      if (playersMap[p] && (isLottery || officialTeams.includes(playersMap[p].team))) {
+      if (playersMap[p] && (isLottery || isGenderDouble || officialTeams.includes(playersMap[p].team))) {
         playersMap[p].rrPts += bPts;
       }
     });
@@ -1339,10 +1345,36 @@ function logicCalculatePoints(yearMonth, manualData) {
     }
   });
 
-  // 分配積分至所有隊員
+  // 5a. 男雙/女雙追分賽：按每場勝負逐場計分 (不採名次加分制，結果計入淘汰分)
+  chasingMatches.forEach(m => {
+    const sA = parseInt(m["A隊比分"]) || 0;
+    const sB = parseInt(m["B隊比分"]) || 0;
+    if (sA === 0 && sB === 0) return;
+    if (String(m["比賽狀態"]) !== "已完賽") return;
+    
+    const area = String(m["區"]);
+    const isGenderDoubleElim = area.includes("男雙") || area.includes("女雙");
+    if (!isGenderDoubleElim) return;
+    
+    const key = Object.keys(areaPoints).find(k => area.includes(k));
+    const ptsCfg = areaPoints[key] || { win: 0, lose: 0 };
+    const aPts = (sA > sB) ? ptsCfg.win : ptsCfg.lose;
+    const bPts = (sB > sA) ? ptsCfg.win : ptsCfg.lose;
+    
+    [m["A隊員1"], m["A隊員2"]].filter(p => p && p !== "待定").forEach(p => {
+      if (playersMap[p]) playersMap[p].elimPts += aPts;
+    });
+    [m["B隊員1"], m["B隊員2"]].filter(p => p && p !== "待定").forEach(p => {
+      if (playersMap[p]) playersMap[p].elimPts += bPts;
+    });
+  });
+
+  // 5b. 一般淘汰賽名次加分：分配積分至所有隊員 (冠軍/季軍賽)
   chasingMatches.forEach(m => {
     const tA = m["A隊名"]; const tB = m["B隊名"];
     const isLotteryMatch = String(m["區"]).includes("猛禽") || String(m["區"]).includes("小鳥");
+    const isGenderDoubleMatch = String(m["區"]).includes("男雙") || String(m["區"]).includes("女雙");
+    if (isGenderDoubleMatch) return; // 男雙/女雙已在 5a 處理，不重複計算
     
     [tA, tB].forEach(team => {
       if (elimPointsMapping[team]) {
