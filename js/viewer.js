@@ -351,6 +351,13 @@ const Viewer = {
                 return;
             }
 
+            // 依日期排序：最新的日期最先出現
+            matches.sort((a, b) => {
+                const da = String(a["年月"] || "").substring(0, 10);
+                const db = String(b["年月"] || "").substring(0, 10);
+                return db.localeCompare(da);
+            });
+
             let html = `<h3 style="margin-bottom:1rem; text-align:center; color:var(--primary);">🎯 「${query}」的比賽紀錄</h3>`;
 
             // 分離預賽 vs 追分/淘汰賽
