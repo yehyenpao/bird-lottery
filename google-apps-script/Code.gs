@@ -502,6 +502,18 @@ function logicGenerateSchedule(yearMonth) {
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(["序號", "年月", "比賽時間", "輪次", "區", "場地", "A隊名", "A隊員1", "A隊員2", "A隊比分", "B隊比分", "B隊名", "B隊員1", "B隊員2", "裁判", "比賽狀態"]);
   }
+  
+  // 寫入「自由練習」與「賽前拍照」行程列
+  sheet.appendRow([
+    "", yearMonth, "13:00", "自由練習", "全區", "全",
+    "先來先用", "", "", "", 
+    "", "", "", "", "", "已完賽"
+  ]);
+  sheet.appendRow([
+    "", yearMonth, "13:20", "賽前拍照", "拍照小物", "全",
+    "拍照小物", "", "", "", 
+    "", "", "", "", "", "已完賽"
+  ]);
 
   // 判斷當前模式：查看註冊表中的區域特徵與隊伍數量
   const areasFound = [...new Set(regItems.map(p => p.區).filter(a => a !== ""))];
@@ -524,7 +536,7 @@ function logicGenerateSchedule(yearMonth) {
     }
 
     const matchups = [[0, 2], [1, 3], [0, 1], [2, 3], [0, 3], [2, 1]];
-    const roundTimes = ["13:40", "14:05", "14:30", "14:45", "15:00", "15:15"];
+    const roundTimes = ["13:30", "13:45", "14:00", "14:15", "14:30", "14:45"];
     let sequenceNum = 1;
 
     // 建立一個以「區 + 隊名」為 key 的人員查詢 Map (排除空白/大小寫干擾)
@@ -575,7 +587,7 @@ function logicGenerateSchedule(yearMonth) {
 
   // 【常規賽】產生邏輯
   const matchups = [[0, 2], [1, 3], [0, 1], [2, 3], [0, 3], [1, 2]];
-  const roundTimes = ["13:40", "14:05", "14:30", "14:45", "15:00", "15:15"];
+  const roundTimes = ["13:30", "13:45", "14:00", "14:15", "14:30", "14:45"];
   
   // 動態對應場地 (根據關鍵字比對)
   const getCourt = (area) => {
@@ -964,10 +976,17 @@ function logicGenerateChasingSchedule(yearMonth, customizedData) {
     const rowObj = headers.map(() => "");
     rowObj[headIdx["序號"]] = seqCount++;
     rowObj[headIdx["年月"]] = yearMonth;
-    rowObj[headIdx["比賽時間"]] = "15:30";
+    
+    let finalCourt = p.court || "";
+    const isJuly2026 = String(yearMonth).startsWith("2026-07");
+    if (isJuly2026 && (finalCourt === "A" || finalCourt === "A場" || finalCourt === "A場地")) {
+      finalCourt = "B";
+    }
+    
+    rowObj[headIdx["比賽時間"]] = "15:15";
     rowObj[headIdx["輪次"]] = p.targetScore; 
     rowObj[headIdx["區"]] = p.area;
-    rowObj[headIdx["場地"]] = p.court;
+    rowObj[headIdx["場地"]] = finalCourt;
     rowObj[headIdx["A隊名"]] = p.teamA;
     rowObj[headIdx["A隊員1"]] = p.A1;
     rowObj[headIdx["A隊員2"]] = p.A2;
@@ -1120,10 +1139,17 @@ function logicGenerateFinals(yearMonth, customizedData) {
     const r = headers.map(() => "");
     r[headIdx["序號"]] = seq++;
     r[headIdx["年月"]] = yearMonth;
-    r[headIdx["比賽時間"]] = "15:30";
+    
+    let finalCourt = p.court || "";
+    const isJuly2026 = String(yearMonth).startsWith("2026-07");
+    if (isJuly2026 && (finalCourt === "A" || finalCourt === "A場" || finalCourt === "A場地")) {
+      finalCourt = "B";
+    }
+    
+    r[headIdx["比賽時間"]] = "16:00";
     r[headIdx["輪次"]] = p.targetScore;
     r[headIdx["區"]] = p.area;
-    r[headIdx["場地"]] = p.court;
+    r[headIdx["場地"]] = finalCourt;
     r[headIdx["A隊名"]] = p.teamA;
     r[headIdx["A隊員1"]] = p.A1; r[headIdx["A隊員2"]] = p.A2; r[headIdx["A隊員3"]] = p.A3 || "";
     r[headIdx["A隊比分"]] = 0;
@@ -2127,16 +2153,22 @@ function logicGenerateLotteryKnockout(yearMonth, customizedData) {
     row[headIdx["序號"]] = seqCount++;
     row[headIdx["年月"]] = yearMonth;
 
-    // 計算時間：從 15:30 開始，每過一 Round 加 15 分鐘 (Round 1=15:30, Round 2=15:45...)
+    let finalCourt = court || "";
+    const isJuly2026 = String(yearMonth).startsWith("2026-07");
+    if (isJuly2026 && (finalCourt === "A" || finalCourt === "A場" || finalCourt === "A場地")) {
+      finalCourt = "B場地";
+    }
+
+    // 計算時間：從 15:15 開始，每過一 Round 加 15 分鐘 (Round 1=15:15, Round 2=15:30...)
     const roundMatch = round.match(/\d+/);
     const roundNum = roundMatch ? parseInt(roundMatch[0]) : 1;
     const offsetMins = (roundNum - 1) * 15;
-    const baseTime = new Date(2000, 0, 1, 15, 30);
+    const baseTime = new Date(2000, 0, 1, 15, 15);
     baseTime.setMinutes(baseTime.getMinutes() + offsetMins);
     row[headIdx["比賽時間"]] = Utilities.formatDate(baseTime, CONFIG.TIMEZONE, "HH:mm");
     row[headIdx["輪次"]] = round; 
     row[headIdx["區"]] = area;
-    row[headIdx["場地"]] = court;
+    row[headIdx["場地"]] = finalCourt;
     row[headIdx["A隊名"]] = teamA;
     const pA = getP(teamA); row[headIdx["A隊員1"]] = pA[0]; row[headIdx["A隊員2"]] = pA[1];
     row[headIdx["B隊名"]] = teamB;
