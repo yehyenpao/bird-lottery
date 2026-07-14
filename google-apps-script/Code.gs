@@ -650,7 +650,8 @@ function logicUpdateScore(d) {
 }
 
 function helperCalculateRankings(yearMonth) {
-  const items = helperGetData(CONFIG.SHEET_ROUND_ROBIN, yearMonth);
+  const allItems = helperGetData(CONFIG.SHEET_ROUND_ROBIN, yearMonth);
+  const items = allItems.filter(m => m["輪次"] !== "自由練習" && m["輪次"] !== "賽前拍照");
   const points = {};
   items.forEach(m => {
     const sA = parseInt(m.A得分 || 0);
@@ -686,7 +687,8 @@ function logicClearData(yearMonth, sheetName) {
  * 取得團隊排名計算 (積分 > 對戰勝場 > 正負商)
  */
 function helperGetTeamRankings(yearMonth) {
-  const items = helperGetData(CONFIG.SHEET_ROUND_ROBIN, yearMonth);
+  const allItems = helperGetData(CONFIG.SHEET_ROUND_ROBIN, yearMonth);
+  const items = allItems.filter(m => m["輪次"] !== "自由練習" && m["輪次"] !== "賽前拍照");
   if (items.length === 0) return [];
 
   // 1. 動態偵測場地/分組 (判斷是否為鳥樂賽)
@@ -737,7 +739,8 @@ function helperGetTeamRankings(yearMonth) {
 }
 
 function helperBuildRoundRobinRankLookup(yearMonth) {
-  const matches = helperGetData(CONFIG.SHEET_ROUND_ROBIN, yearMonth);
+  const allMatches = helperGetData(CONFIG.SHEET_ROUND_ROBIN, yearMonth);
+  const matches = allMatches.filter(m => m["輪次"] !== "自由練習" && m["輪次"] !== "賽前拍照");
   if (!matches || matches.length === 0) return {};
 
   const clean = (value) => String(value || "").replace(/\s+/g, "").trim();

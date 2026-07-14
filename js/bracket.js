@@ -121,6 +121,7 @@ const Bracket = {
                             </tr>
                         </thead>
                         <tbody>
+                            ${this.renderActivityRows(matches)}
                             ${roundRows.map((round, index) => this.renderRecordRound(round, index)).join("")}
                             ${this.renderChasingStageRows(chasingStages, areaSlots.length)}
                         </tbody>
@@ -128,6 +129,40 @@ const Bracket = {
                 </div>
             </div>
         `;
+    },
+
+    renderActivityRows(matches) {
+        let html = "";
+        const clean = (val) => String(val || "").trim();
+        
+        const freePractice = matches.find(m => clean(m["輪次"]) === "自由練習");
+        if (freePractice) {
+            html += `
+                <tr class="rr-record-row-group" style="background: rgba(255,255,255,0.02); height: 3.5rem;">
+                    <td class="rr-record-time">13:00-13:20</td>
+                    <td class="rr-record-trip">${this.escapeHtml(freePractice["輪次"])}</td>
+                    <td class="rr-record-team-name" style="color: var(--text-dim);">${this.escapeHtml(freePractice["A隊名"])}</td>
+                    <td colspan="6" style="text-align: center; color: var(--primary); font-weight: bold; background: rgba(0,0,0,0.15); vertical-align: middle;">
+                        自由使用 / 抽籤分隊伍、主審協助完成各場名單登錄
+                    </td>
+                </tr>
+            `;
+        }
+
+        const photoSession = matches.find(m => clean(m["輪次"]) === "賽前拍照");
+        if (photoSession) {
+            html += `
+                <tr class="rr-record-row-group" style="background: rgba(255,255,255,0.02); height: 3.5rem;">
+                    <td class="rr-record-time">13:20-13:30</td>
+                    <td class="rr-record-trip">${this.escapeHtml(photoSession["輪次"])}</td>
+                    <td class="rr-record-team-name" style="color: var(--text-dim);">${this.escapeHtml(photoSession["A隊名"])}</td>
+                    <td colspan="6" style="text-align: center; color: var(--primary); font-weight: bold; background: rgba(0,0,0,0.15); vertical-align: middle;">
+                        賽前大合照，順便點名未到者，隊友協助聯繫
+                    </td>
+                </tr>
+            `;
+        }
+        return html;
     },
 
     getRecordAreaSlots(matches) {

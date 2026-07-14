@@ -1,4 +1,4 @@
-﻿const Results = {
+const Results = {
     standardCombos: [
         { order: 1, label: "組合1" },
         { order: 2, label: "組合2" },
@@ -10,7 +10,8 @@
     async load() {
         const res = await API.getSchedule();
         if (res && res.status === "success") {
-            this.calculateAndRender(res.data || []);
+            const validMatches = (res.data || []).filter(m => m["輪次"] !== "自由練習" && m["輪次"] !== "賽前拍照");
+            this.calculateAndRender(validMatches);
         } else {
             this.renderEmpty();
         }
