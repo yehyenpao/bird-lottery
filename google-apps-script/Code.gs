@@ -725,6 +725,41 @@ function helperGetTeamRankings(yearMonth) {
     }
   });
 
+  // 計算「勝負場積分」 (每輪 3 場組合對決勝負：勝+2 / 敗+1)
+  const comboGroups = {};
+  items.forEach(match => {
+    const teamA = clean(match["A隊名"]);
+    const teamB = clean(match["B隊名"]);
+    if (!teamA || !teamB || !stats[teamA] || !stats[teamB]) return;
+
+    const round = clean(match["輪次"]);
+    const pairKey = [teamA, teamB].sort().join("::");
+    const groupKey = round + "||" + pairKey;
+
+    if (!comboGroups[groupKey]) {
+      comboGroups[groupKey] = { teamA, teamB, wins: { [teamA]: 0, [teamB]: 0 } };
+    }
+
+    const scoreA = parseInt(match["A隊比分"] || 0, 10);
+    const scoreB = parseInt(match["B隊比分"] || 0, 10);
+    if (scoreA > scoreB) comboGroups[groupKey].wins[teamA]++;
+    if (scoreB > scoreA) comboGroups[groupKey].wins[teamB]++;
+  });
+
+  Object.values(comboGroups).forEach(group => {
+    const winsA = group.wins[group.teamA] || 0;
+    const winsB = group.wins[group.teamB] || 0;
+    if (winsA === 0 && winsB === 0) return;
+
+    if (winsA > winsB) {
+      stats[group.teamA].comboPoints = (stats[group.teamA].comboPoints || 0) + 2;
+      stats[group.teamB].comboPoints = (stats[group.teamB].comboPoints || 0) + 1;
+    } else if (winsB > winsA) {
+      stats[group.teamB].comboPoints = (stats[group.teamB].comboPoints || 0) + 2;
+      stats[group.teamA].comboPoints = (stats[group.teamA].comboPoints || 0) + 1;
+    }
+  });
+
   // 讀取報名紀錄表中預填的隊伍「循環名次」 (如有)
   const regItems = helperGetData(CONFIG.SHEET_REGISTRATION, yearMonth);
   const manualRanks = {};
@@ -741,6 +776,9 @@ function helperGetTeamRankings(yearMonth) {
     if (manualRanks[a.name] && manualRanks[b.name] && manualRanks[a.name] !== manualRanks[b.name]) {
       return manualRanks[a.name] - manualRanks[b.name];
     }
+    const comboA = a.comboPoints || 0;
+    const comboB = b.comboPoints || 0;
+    if (comboB !== comboA) return comboB - comboA;
     if (b.points !== a.points) return b.points - a.points;
     if (b.wins !== a.wins) return b.wins - a.wins;
     const diffA = a.scored - a.conceded;
