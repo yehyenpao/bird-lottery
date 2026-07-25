@@ -1479,21 +1479,22 @@ function logicCalculatePoints(yearMonth, manualData) {
     const area = String(m["區"]);
     let ptsCfg = { win: 0, lose: 0 };
     const isTeamMatch = area.includes("團體");
-    
-    // 判斷是否為鳥樂賽 (場地關鍵字)
     const isLottery = area.includes("場");
-    if (isLottery) {
-        ptsCfg = { win: 100, lose: 50 };
+    
+    // 優先由區域名稱關鍵字匹配 areaPoints (如 狐狸 90/45、鳥蛋 60/30、猛禽 100/50、小鳥 80/40)
+    const key = Object.keys(areaPoints).find(k => area.includes(k));
+    if (key) {
+        ptsCfg = areaPoints[key];
     } else if (area.includes("男雙")) {
         ptsCfg = { win: 100, lose: 50 };
     } else if (area.includes("女雙")) {
         ptsCfg = { win: 50, lose: 25 };
     } else if (isTeamMatch) {
         // 團體賽：點數於下方依球員分區動態決定
+    } else if (isLottery) {
+        ptsCfg = { win: 90, lose: 45 };
     } else {
-        // 常規區模糊匹配
-        const key = Object.keys(areaPoints).find(k => area.includes(k));
-        ptsCfg = areaPoints[key] || { win: 0, lose: 0 };
+        ptsCfg = { win: 0, lose: 0 };
     }
     
     const teamAPlayers = [m["A隊員1"], m["A隊員2"]].map(cleanPlayerName).filter(p => p && p !== "待定");
