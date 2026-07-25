@@ -725,11 +725,22 @@ function helperGetTeamRankings(yearMonth) {
     }
   });
 
+  // 讀取報名紀錄表中預填的隊伍「循環名次」 (如有)
+  const regItems = helperGetData(CONFIG.SHEET_REGISTRATION, yearMonth);
+  const manualRanks = {};
+  regItems.forEach(p => {
+    const t = clean(p["隊名"]);
+    const r = parseInt(p["循環名次"]);
+    if (t && r && !isNaN(r)) manualRanks[t] = r;
+  });
+
   // 3. 排序與分組排名
   const results = Object.values(stats);
   
-  // 如果是鳥樂賽，我們回傳一個按區域分組的結果，或者排序好的 12 隊列表
   return results.sort((a, b) => {
+    if (manualRanks[a.name] && manualRanks[b.name] && manualRanks[a.name] !== manualRanks[b.name]) {
+      return manualRanks[a.name] - manualRanks[b.name];
+    }
     if (b.points !== a.points) return b.points - a.points;
     if (b.wins !== a.wins) return b.wins - a.wins;
     const diffA = a.scored - a.conceded;
