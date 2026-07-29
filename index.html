@@ -21,7 +21,7 @@
             <div class="logo">
                 <i class="fas fa-shuttlecock"></i>
                 <div class="logo-text">
-                    <span class="brand-name">嘰嘰喳喳</span><span class="sub-brand">鳥樂賽</span><span class="version-badge" style="font-size: 0.7rem; background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; opacity: 0.8;">v104</span>
+                    <span class="brand-name">嘰嘰喳喳</span><span class="sub-brand">鳥樂賽</span><span class="version-badge" style="font-size: 0.7rem; background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; opacity: 0.8;">v105</span>
                 </div>
             </div>
             
@@ -123,8 +123,12 @@
             </section>
 
             <section id="tab-schedule" class="tab-content">
-                <div class="card-header" style="justify-content: flex-start; margin-bottom: 1.5rem; gap: 1rem;">
+                <div class="card-header" style="justify-content: flex-start; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap; align-items: center;">
                     <h2><i class="fas fa-calendar-alt"></i> 2. 循環賽程管理</h2>
+                    <select id="schedule-order-select" style="padding:0.4rem 0.8rem; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; border-radius:6px; font-size:0.85rem;">
+                        <option value="eggFirst">順序：鳥蛋 ➔ 小鳥 ➔ 猛禽 (場地 A ➔ B ➔ C)</option>
+                        <option value="raptorFirst">順序：猛禽 ➔ 小鳥 ➔ 鳥蛋 (場地 C ➔ B ➔ A)</option>
+                    </select>
                     <button id="btn-gen-schedule" class="btn btn-success btn-sm">
                         <i class="fas fa-magic"></i> 自動產生賽程
                     </button>

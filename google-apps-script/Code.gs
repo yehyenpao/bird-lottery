@@ -73,7 +73,8 @@ function handleRequest(e) {
         result = logicAutoGroup(yearMonth, typeof data === "string" ? data : (data && data.mode) || "default");
         break;
       case "generateSchedule":
-        result = logicGenerateSchedule(yearMonth);
+        const scheduleOrder = e.parameter.order || (data && data.order) || "eggFirst";
+        result = logicGenerateSchedule(yearMonth, scheduleOrder);
         break;
       case "updateScore":
         result = logicUpdateScore(data);
@@ -482,7 +483,7 @@ function logicAddRegistrations(data) {
 /**
  * 自動產生循環賽程
  */
-function logicGenerateSchedule(yearMonth) {
+function logicGenerateSchedule(yearMonth, order = "eggFirst") {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const regItems = helperGetData(CONFIG.SHEET_REGISTRATION, yearMonth);
   if (regItems.length < 2) return { status: "error", message: "分組人數不足 (目前 " + regItems.length + " 人)" };
@@ -527,12 +528,36 @@ function logicGenerateSchedule(yearMonth) {
     return { status: "error", message: "尚未完成分區！請先返回「報名管理」執行【啟動智慧分組】（或手動填入 A區/B區/C區），才能產生鳥樂賽的賽程喔！" };
   }
 
+  // 動態對應場地 (根據關鍵字比對)
+  const getCourt = (area) => {
+    if (area.includes("猛") || area.includes("孵蛋 A") || area.includes("狐狸 A")) return "C";
+    if (area.includes("小鳥") || area.includes("狐狸 B") || area.includes("醬板鴨 A")) return "B";
+    if (area.includes("蛋") || area.includes("孵蛋 B") || area.includes("醬板鴨 B")) return "A";
+    return "A";
+  };
+
+  const getCourtWeight = (area) => {
+    const c = getCourt(area);
+    if (c === "A") return 1;
+    if (c === "B") return 2;
+    if (c === "C") return 3;
+    return 1;
+  };
+
+  const isRaptorFirst = (order === "raptorFirst" || order === "CBA" || order === "猛禽優先");
+
   if (isLottery) {
     // 【鳥樂賽】12隊預賽產生邏輯
-    // 動態讀取包含「場」的區域（鳥樂賽區域名均含「場」）
-    const courtAreas = areasFound.filter(a => a.includes("場")).sort();
+    // 動態讀取包含「場」的區域
+    const courtAreas = areasFound.filter(a => a.includes("場"));
     if (courtAreas.length === 0) {
       return { status: "error", message: "找不到任何包含「場」的分區，無法產生賽程！" };
+    }
+
+    if (isRaptorFirst) {
+      courtAreas.sort((a, b) => getCourtWeight(b) - getCourtWeight(a));
+    } else {
+      courtAreas.sort((a, b) => getCourtWeight(a) - getCourtWeight(b));
     }
 
     const matchups = [[0, 2], [1, 3], [0, 1], [2, 3], [0, 3], [2, 1]];
@@ -589,13 +614,11 @@ function logicGenerateSchedule(yearMonth) {
   const matchups = [[0, 2], [1, 3], [0, 1], [2, 3], [0, 3], [1, 2]];
   const roundTimes = ["13:30", "13:45", "14:00", "14:15", "14:30", "14:45"];
   
-  // 動態對應場地 (根據關鍵字比對)
-  const getCourt = (area) => {
-    if (area.includes("猛") || area.includes("孵蛋 A") || area.includes("狐狸 A")) return "C";
-    if (area.includes("小鳥") || area.includes("狐狸 B") || area.includes("醬板鴨 A")) return "B";
-    if (area.includes("蛋") || area.includes("孵蛋 B") || area.includes("醬板鴨 B")) return "A";
-    return "A";
-  };
+  if (isRaptorFirst) {
+    areasFound.sort((a, b) => getCourtWeight(b) - getCourtWeight(a));
+  } else {
+    areasFound.sort((a, b) => getCourtWeight(a) - getCourtWeight(b));
+  }
   
   let sequenceNum = 1;
   matchups.forEach((pair, idx) => {
@@ -614,7 +637,7 @@ function logicGenerateSchedule(yearMonth) {
     });
   });
   
-  return { status: "success", message: "常規賽賽程已成功產生，並已動態適配分組名稱與場地！" };
+  return { status: "success", message: `常規賽賽程已成功產生！(順序：${isRaptorFirst ? "猛禽➔小鳥➔鳥蛋" : "鳥蛋➔小鳥➔猛禽"})` };
 }
 
 /**

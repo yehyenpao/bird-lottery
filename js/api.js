@@ -109,7 +109,7 @@ const API = {
         return this.call("addRegistrations", payload);
     },
     autoGroup(mode = "default") { return this.call("autoGroup", mode); },
-    generateSchedule() { return this.call("generateSchedule"); },
+    generateSchedule(order = "eggFirst") { return this.call("generateSchedule", { order }); },
     updateScore(scoreData) { return this.call("updateScore", scoreData); },
     updateChasingScore(scoreData) { return this.call("updateChasingScore", scoreData); },
     updatePlayerOrder(data) { return this.call("updatePlayerOrder", data); },

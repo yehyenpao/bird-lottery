@@ -20,8 +20,12 @@ const Schedule = {
     },
 
     async generate() {
-        if (!confirm("確定要產生新的循環賽程嗎？這會清除現有的當月賽程。")) return;
-        const res = await API.generateSchedule();
+        const orderSelect = document.getElementById("schedule-order-select");
+        const order = orderSelect ? orderSelect.value : "eggFirst";
+        const orderLabel = order === "raptorFirst" ? "【猛禽 ➔ 小鳥 ➔ 鳥蛋】" : "【鳥蛋 ➔ 小鳥 ➔ 猛禽】";
+
+        if (!confirm(`確定要依據 ${orderLabel} 順序產生新的循環賽程嗎？這會清除現有的當月賽程。`)) return;
+        const res = await API.generateSchedule(order);
         if (res && res.status === "success") {
             alert(res.message || "賽程產生成功！");
             this.load();
