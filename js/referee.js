@@ -44,18 +44,19 @@ const Referee = {
 
     populateSelects() {
         const selectMatch = document.getElementById("select-match");
-        let html = "<option value=''>-- 請選擇比賽 (輪次, 區, 場地, 隊名-人員) --</option>";
+        let html = "<option value=''>-- 請選擇比賽 (序號, 區, 場地, 隊名-人員) --</option>";
         
         this.matches.forEach((m, idx) => {
             const statusStr = m.比賽狀態 ? ` [${m.比賽狀態}]` : "";
-            const label = `第${m.輪次}輪, ${m.區}, 場地${m.場地}, ${m.A隊名}(${m.A隊員1},${m.A隊員2}) vs ${m.B隊名}(${m.B隊員1},${m.B隊員2})${statusStr}`;
+            const seqStr = m.序號 ? `序號${m.序號}` : `第${m.輪次}輪`;
+            const label = `${seqStr}, ${m.區}, 場地${m.場地}, ${m.A隊名}(${m.A隊員1},${m.A隊員2}) vs ${m.B隊名}(${m.B隊員1},${m.B隊員2})${statusStr}`;
             html += `<option value="${idx}">${label}</option>`;
         });
         selectMatch.innerHTML = html;
         
         if (this.currentMatch) {
             const currentIdx = this.matches.findIndex(m => 
-                m.輪次 == this.currentMatch.輪次 && m.場地 == this.currentMatch.場地
+                (m.序號 && this.currentMatch.序號 ? m.序號 == this.currentMatch.序號 : (m.輪次 == this.currentMatch.輪次 && m.場地 == this.currentMatch.場地))
             );
             if (currentIdx > -1) selectMatch.value = currentIdx;
         }
