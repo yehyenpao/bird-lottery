@@ -97,33 +97,143 @@ const Bracket = {
     },
 
     renderRecordTable(matches, chasingMatches, teams) {
-        const areaSlots = this.getRecordAreaSlots(matches);
-        const roundRows = this.buildRecordRounds(matches, teams, areaSlots);
-        const chasingStages = this.buildChasingStages(chasingMatches);
+        const getMatch = (roundNo, courtKey) => {
+            return (matches || []).find(m => {
+                const r = String(m["輪次"] || "").replace(/\D/g, "");
+                const c = String(m["場地"] || "").toUpperCase().trim();
+                return r === String(roundNo) && c === courtKey;
+            });
+        };
+
+        const roundsDef = [
+            { roundNo: 1, time: "13:20-13:35", desc: "循環賽1<br><small style='color:#38bdf8;'>3分列隊<br>12分鐘比賽</small>", team: "鳥蛋", seqB: "序號1", seqC: "序號2", teamsB: "藍鳥 VS 青鳥", teamsC: "黑鳥 VS 粉鳥" },
+            { roundNo: 2, time: "13:35-13:47", desc: "循環賽2<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "小鳥", seqB: "序號3", seqC: "序號4", teamsB: "藍鳥 VS 青鳥", teamsC: "黑鳥 VS 粉鳥" },
+            { roundNo: 3, time: "13:47-13:59", desc: "循環賽3<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "猛禽", seqB: "序號5", seqC: "序號6", teamsB: "藍鳥 VS 青鳥", teamsC: "黑鳥 VS 粉鳥" },
+            { roundNo: 4, time: "13:59-14:14", desc: "循環賽4<br><small style='color:#38bdf8;'>3分列隊<br>12分鐘比賽</small>", team: "鳥蛋", seqB: "序號7", seqC: "序號8", teamsB: "藍鳥 VS 黑鳥", teamsC: "青鳥 VS 粉鳥" },
+            { roundNo: 5, time: "14:14-14:26", desc: "循環賽5<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "小鳥", seqB: "序號9", seqC: "序號10", teamsB: "藍鳥 VS 黑鳥", teamsC: "青鳥 VS 粉鳥" },
+            { roundNo: 6, time: "14:26-14:38", desc: "循環賽6<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "猛禽", seqB: "序號11", seqC: "序號12", teamsB: "藍鳥 VS 黑鳥", teamsC: "青鳥 VS 粉鳥" },
+            { roundNo: 7, time: "14:38-14:53", desc: "循環賽7<br><small style='color:#38bdf8;'>3分列隊<br>12分鐘比賽</small>", team: "鳥蛋", seqB: "序號13", seqC: "序號14", teamsB: "藍鳥 VS 粉鳥", teamsC: "青鳥 VS 黑鳥" },
+            { roundNo: 8, time: "14:53-15:05", desc: "循環賽8<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "小鳥", seqB: "序號15", seqC: "序號16", teamsB: "藍鳥 VS 粉鳥", teamsC: "青鳥 VS 黑鳥" },
+            { roundNo: 9, time: "15:05-15:17", desc: "循環賽9<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "猛禽", seqB: "序號17", seqC: "序號18", teamsB: "藍鳥 VS 粉鳥", teamsC: "青鳥 VS 黑鳥" }
+        ];
 
         return `
             <div class="record-board-wrap">
                 <div class="record-board-head">
                     <h3 class="record-board-title">預賽紀錄表</h3>
-                    <p class="record-board-subtitle">下方會自動帶入預賽紀錄表與複賽資料；若尚未產生資料則先留空。</p>
+                    <p class="record-board-subtitle">全場時間流程對照與對戰紀錄表（與大會賽程表格式一致）。</p>
                 </div>
                 <div class="record-board-scroll">
-                    <table class="rr-record-table">
+                    <table class="rr-record-table timetable-grid" style="width:100%; border-collapse:collapse; text-align:center;">
                         <thead>
-                            <tr>
-                                <th rowspan="2">時間</th>
-                                <th rowspan="2">行程</th>
-                                <th rowspan="2">隊伍</th>
-                                ${areaSlots.map(slot => `<th colspan="2">${this.escapeHtml(slot.label)}</th>`).join("")}
-                            </tr>
-                            <tr>
-                                ${areaSlots.map(() => `<th>選手 1</th><th>選手 2</th>`).join("")}
+                            <tr style="background: rgba(30, 41, 59, 0.9); color: var(--accent);">
+                                <th style="width:12%; padding:10px; border:1px solid var(--border);">時間</th>
+                                <th style="width:18%; padding:10px; border:1px solid var(--border);">行程</th>
+                                <th style="width:10%; padding:10px; border:1px solid var(--border);">隊伍</th>
+                                <th style="width:20%; padding:10px; border:1px solid var(--border);">場A</th>
+                                <th style="width:20%; padding:10px; border:1px solid var(--border);">場B</th>
+                                <th style="width:20%; padding:10px; border:1px solid var(--border);">場C</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${this.renderActivityRows(matches)}
-                            ${roundRows.map((round, index) => this.renderRecordRound(round, index)).join("")}
-                            ${this.renderChasingStageRows(chasingStages, areaSlots.length)}
+                            <!-- 13:00-13:10 自由練習 -->
+                            <tr style="border-bottom:1px solid var(--border);">
+                                <td style="padding:10px; border:1px solid var(--border);">13:00-13:10</td>
+                                <td style="padding:10px; border:1px solid var(--border);">自由練習</td>
+                                <td style="padding:10px; border:1px solid var(--border); color:var(--text-dim);">先來先用</td>
+                                <td colspan="3" style="padding:10px; border:1px solid var(--border); background:rgba(255,255,255,0.02);">
+                                    <b>自由使用</b><br>
+                                    <small style="color:var(--text-dim);">抽籤分隊伍、主審協助完成各場名單登錄</small>
+                                </td>
+                            </tr>
+
+                            <!-- 13:10-13:20 賽前拍照 -->
+                            <tr style="border-bottom:1px solid var(--border);">
+                                <td style="padding:10px; border:1px solid var(--border);">13:10-13:20</td>
+                                <td style="padding:10px; border:1px solid var(--border);">
+                                    賽前拍照<br><small style="color:#ef4444; font-weight:bold;">10分鐘拍照</small>
+                                </td>
+                                <td style="padding:10px; border:1px solid var(--border); color:var(--text-dim);">拍照小物</td>
+                                <td colspan="3" style="padding:10px; border:1px solid var(--border); background:rgba(255,255,255,0.02);">
+                                    <b>賽前大合照，順便點名未到者，隊友協助聯繫</b><br>
+                                    <small style="color:var(--text-dim);">團體賽3點順序出賽，取得2點隊伍獲勝 (3點都要比完)</small>
+                                </td>
+                            </tr>
+
+                            <!-- 循環賽 1~9 -->
+                            ${roundsDef.map((r, idx) => `
+                                <tr style="border-bottom:1px solid var(--border); background:${idx % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.15)'}">
+                                    <td style="padding:8px; border:1px solid var(--border);">${r.time}</td>
+                                    <td style="padding:8px; border:1px solid var(--border);">${r.desc}</td>
+                                    <td style="padding:8px; border:1px solid var(--border); font-weight:bold; color:var(--primary);">${r.team}</td>
+                                    ${idx === 0 ? `
+                                        <td rowspan="9" style="padding:12px; border:1px solid var(--border); vertical-align:middle; background:rgba(251,191,36,0.08); color:#fbbf24; font-weight:bold;">
+                                            自由使用，建議下一輪對戰的可以先簡單熱身 3~5 分鐘
+                                        </td>
+                                    ` : ''}
+                                    <td style="padding:8px; border:1px solid var(--border);">${this.renderCourtCell(getMatch(r.roundNo, "B"), r.seqB, r.teamsB)}</td>
+                                    <td style="padding:8px; border:1px solid var(--border);">${this.renderCourtCell(getMatch(r.roundNo, "C"), r.seqC, r.teamsC)}</td>
+                                </tr>
+                            `).join("")}
+
+                            <!-- 15:17-15:20 排名結果 -->
+                            <tr style="border-bottom:1px solid var(--border);">
+                                <td style="padding:10px; border:1px solid var(--border);">15:17-15:20</td>
+                                <td style="padding:10px; border:1px solid var(--border); font-weight:bold;">排名結果</td>
+                                <td style="padding:10px; border:1px solid var(--border); color:var(--text-dim);">NA</td>
+                                <td rowspan="6" style="padding:12px; border:1px solid var(--border); vertical-align:middle; background:rgba(239,68,68,0.12); color:#f87171; font-weight:bold;">
+                                    15:00開始，取消A場，不可使用
+                                </td>
+                                <td colspan="2" style="padding:10px; border:1px solid var(--border); background:rgba(255,255,255,0.02); font-weight:bold; color:var(--accent);">
+                                    循環賽成績公布 / 複賽 (羽球接力賽)
+                                </td>
+                            </tr>
+
+                            <!-- 15:20-15:25 複賽分隊 -->
+                            <tr style="border-bottom:1px solid var(--border);">
+                                <td style="padding:8px; border:1px solid var(--border);">15:20-15:25</td>
+                                <td style="padding:8px; border:1px solid var(--border);">複賽<br><small style="color:#38bdf8;">5分鐘分隊</small></td>
+                                <td style="padding:8px; border:1px solid var(--border); color:var(--text-dim);">NA</td>
+                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; color:var(--text-dim);">循環排名3 VS 循環排名2</td>
+                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; color:var(--text-dim);">循環排名4 VS 循環排名1</td>
+                            </tr>
+
+                            <!-- 15:25-16:05 複賽對戰 -->
+                            <tr style="border-bottom:1px solid var(--border); background:rgba(0,0,0,0.15);">
+                                <td style="padding:8px; border:1px solid var(--border);">15:25-16:05</td>
+                                <td style="padding:8px; border:1px solid var(--border); font-weight:bold;">複賽<br><small style="color:#38bdf8;">40分鐘比賽</small></td>
+                                <td style="padding:8px; border:1px solid var(--border); color:var(--text-dim);">NA</td>
+                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "準決賽1", "序號19", "循環排名3 VS 循環排名2")}</td>
+                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "準決賽2", "序號20", "循環排名4 VS 循環排名1")}</td>
+                            </tr>
+
+                            <!-- 16:05-16:10 最終排名賽分隊 -->
+                            <tr style="border-bottom:1px solid var(--border);">
+                                <td style="padding:8px; border:1px solid var(--border);">16:05-16:10</td>
+                                <td style="padding:8px; border:1px solid var(--border);">最終排名賽<br><small style="color:#38bdf8;">5分鐘分隊</small></td>
+                                <td style="padding:8px; border:1px solid var(--border); color:var(--text-dim);">NA</td>
+                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; color:var(--text-dim);">季軍戰(序號21)</td>
+                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; color:var(--text-dim);">冠亞軍戰(序號22)</td>
+                            </tr>
+
+                            <!-- 16:10-16:50 最終排名賽對戰 -->
+                            <tr style="border-bottom:1px solid var(--border); background:rgba(0,0,0,0.15);">
+                                <td style="padding:8px; border:1px solid var(--border);">16:10-16:50</td>
+                                <td style="padding:8px; border:1px solid var(--border); font-weight:bold;">最終排名賽<br><small style="color:#38bdf8;">40分鐘比賽</small></td>
+                                <td style="padding:8px; border:1px solid var(--border); color:var(--text-dim);">NA</td>
+                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "季軍戰", "季軍戰(序號21)", "複賽敗隊 VS 複賽敗隊")}</td>
+                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "冠軍賽", "冠亞軍戰(序號22)", "複賽勝隊 VS 複賽勝隊")}</td>
+                            </tr>
+
+                            <!-- 16:50-17:00 頒獎 -->
+                            <tr style="border-bottom:1px solid var(--border);">
+                                <td style="padding:10px; border:1px solid var(--border);">16:50-17:00</td>
+                                <td style="padding:10px; border:1px solid var(--border); font-weight:bold;">頒獎</td>
+                                <td style="padding:10px; border:1px solid var(--border); color:var(--text-dim);">NA</td>
+                                <td colspan="2" style="padding:10px; border:1px solid var(--border); background:rgba(255,255,255,0.02); font-weight:bold; color:var(--accent);">
+                                    公布最後排名 & 各隊伍拍照
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -131,158 +241,80 @@ const Bracket = {
         `;
     },
 
-    renderActivityRows(matches) {
-        let html = "";
-        const clean = (val) => String(val || "").trim();
-        
-        const freePractice = matches.find(m => clean(m["輪次"]) === "自由練習");
-        if (freePractice) {
-            html += `
-                <tr class="rr-record-row-group" style="background: rgba(255,255,255,0.02); height: 3.5rem;">
-                    <td class="rr-record-time">13:00-13:20</td>
-                    <td class="rr-record-trip">${this.escapeHtml(freePractice["輪次"])}</td>
-                    <td class="rr-record-team-name" style="color: var(--text-dim);">${this.escapeHtml(freePractice["A隊名"])}</td>
-                    <td colspan="6" style="text-align: center; color: var(--primary); font-weight: bold; background: rgba(0,0,0,0.15); vertical-align: middle;">
-                        自由使用 / 抽籤分隊伍、主審協助完成各場名單登錄
-                    </td>
-                </tr>
+    renderCourtCell(match, defaultLabel, defaultTeams) {
+        if (!match) {
+            return `
+                <div style="text-align:center; padding:0.2rem;">
+                    <div style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${this.escapeHtml(defaultLabel)}</div>
+                    <div style="font-size:0.85rem; color:white; margin-top:2px;">${this.escapeHtml(defaultTeams)}</div>
+                </div>
             `;
         }
 
-        const photoSession = matches.find(m => clean(m["輪次"]) === "賽前拍照");
-        if (photoSession) {
-            html += `
-                <tr class="rr-record-row-group" style="background: rgba(255,255,255,0.02); height: 3.5rem;">
-                    <td class="rr-record-time">13:20-13:30</td>
-                    <td class="rr-record-trip">${this.escapeHtml(photoSession["輪次"])}</td>
-                    <td class="rr-record-team-name" style="color: var(--text-dim);">${this.escapeHtml(photoSession["A隊名"])}</td>
-                    <td colspan="6" style="text-align: center; color: var(--primary); font-weight: bold; background: rgba(0,0,0,0.15); vertical-align: middle;">
-                        賽前大合照，順便點名未到者，隊友協助聯繫
-                    </td>
-                </tr>
-            `;
-        }
-        return html;
-    },
+        const seq = match["序號"] ? `序號${match["序號"]}` : defaultLabel;
+        const teamA = match["A隊名"] || "";
+        const teamB = match["B隊名"] || "";
+        const scoreA = match["A隊比分"] ?? "";
+        const scoreB = match["B隊比分"] ?? "";
+        const status = match["比賽狀態"] || "待賽";
+        const isDone = status === "已完賽";
 
-    getRecordAreaSlots(matches) {
-        const defaults = [
-            { key: "A", label: "場A-猛禽區" },
-            { key: "B", label: "場B-小鳥區" },
-            { key: "C", label: "場C-孵蛋區" }
-        ];
-
-        const labelsByCourt = {};
-        matches.forEach(match => {
-            const court = this.resolveCourtKey(match);
-            if (!court || labelsByCourt[court]) return;
-
-            const area = String(match["區"] || "").trim();
-            if (!area) return;
-            labelsByCourt[court] = `場${court}-${area}`;
-        });
-
-        return defaults.map(slot => ({
-            ...slot,
-            label: labelsByCourt[slot.key] || slot.label
-        }));
-    },
-
-    buildRecordRounds(matches, teams, areaSlots) {
-        const roundMap = new Map();
-        matches.forEach(match => {
-            const roundNo = this.parseRoundNumber(match["輪次"]);
-            if (!roundNo) return;
-
-            if (!roundMap.has(roundNo)) {
-                roundMap.set(roundNo, []);
-            }
-            roundMap.get(roundNo).push(match);
-        });
-
-        const teamLookup = Object.fromEntries(teams.map(team => [team.key, team]));
-        const uniqueRoundNos = [...roundMap.keys()].sort((a, b) => a - b);
-        const roundTimes = {};
-
-        uniqueRoundNos.forEach((roundNo, index) => {
-            const currentMatches = roundMap.get(roundNo) || [];
-            const start = this.pickRoundTime(currentMatches);
-            const nextRound = uniqueRoundNos[index + 1];
-            const nextStart = nextRound ? this.pickRoundTime(roundMap.get(nextRound) || []) : "";
-            roundTimes[roundNo] = this.formatTimeRange(start, nextStart);
-        });
-
-        return this.combinations.map(combo => {
-            const roundMatches = roundMap.get(combo.order) || [];
-            const matchByCourt = {};
-            roundMatches.forEach(match => {
-                const court = this.resolveCourtKey(match);
-                if (court) matchByCourt[court] = match;
-            });
-
-            const teamA = teamLookup[combo.teams[0]];
-            const teamB = teamLookup[combo.teams[1]];
-
-            return {
-                roundNo: combo.order,
-                timeLabel: roundTimes[combo.order] || "",
-                tripLabel: combo.label,
-                teamAName: teamA ? teamA.teamName : "",
-                teamBName: teamB ? teamB.teamName : "",
-                matches: Object.fromEntries(areaSlots.map(slot => [slot.key, matchByCourt[slot.key] || null]))
-            };
-        });
-    },
-
-    renderRecordRound(round, index) {
-        const rowClass = index % 2 === 0 ? "is-blue" : "is-green";
-        const slotKeys = Object.keys(round.matches);
-
-        let winsA = 0;
-        let winsB = 0;
-        slotKeys.forEach(key => {
-            const m = round.matches[key];
-            if (m) {
-                const sA = Number(m["A隊比分"]) || 0;
-                const sB = Number(m["B隊比分"]) || 0;
-                if (sA > sB) winsA++;
-                else if (sB > sA) winsB++;
-            }
-        });
-
-        let teamABonus = "";
-        let teamBBonus = "";
-        if (winsA > winsB) {
-            teamABonus = `<span class="combo-bonus win-bonus">+2</span>`;
-            teamBBonus = `<span class="combo-bonus lose-bonus">+1</span>`;
-        } else if (winsB > winsA) {
-            teamABonus = `<span class="combo-bonus lose-bonus">+1</span>`;
-            teamBBonus = `<span class="combo-bonus win-bonus">+2</span>`;
+        let scoreHtml = "";
+        if (isDone || (scoreA !== "" && scoreB !== "" && (Number(scoreA) > 0 || Number(scoreB) > 0))) {
+            const numA = Number(scoreA) || 0;
+            const numB = Number(scoreB) || 0;
+            const colorA = numA > numB ? "#4ade80" : (numB > numA ? "#f87171" : "white");
+            const colorB = numB > numA ? "#4ade80" : (numA > numB ? "#f87171" : "white");
+            scoreHtml = `<div style="font-weight:bold; font-size:0.95rem; margin-top:2px;"><span style="color:${colorA}">${numA}</span> : <span style="color:${colorB}">${numB}</span></div>`;
         }
 
         return `
-            <tr class="rr-record-row-group ${rowClass}">
-                <td rowspan="5" class="rr-record-time">${this.escapeHtml(round.timeLabel || "")}</td>
-                <td rowspan="5" class="rr-record-trip">${this.escapeHtml(round.tripLabel)}</td>
-                <td class="rr-record-team-name">${teamABonus}${this.escapeHtml(round.teamAName)}</td>
-                ${slotKeys.map(key => this.renderPlayerCells(round.matches[key], "A")).join("")}
-            </tr>
-            <tr class="rr-record-row-group ${rowClass}">
-                <td class="rr-record-label score">分數</td>
-                ${slotKeys.map(key => this.renderScoreCells(round.matches[key], "A")).join("")}
-            </tr>
-            <tr class="rr-record-row-group ${rowClass}">
-                <td class="rr-record-team-name">${teamBBonus}${this.escapeHtml(round.teamBName)}</td>
-                ${slotKeys.map(key => this.renderPlayerCells(round.matches[key], "B")).join("")}
-            </tr>
-            <tr class="rr-record-row-group ${rowClass}">
-                <td class="rr-record-label score">分數</td>
-                ${slotKeys.map(key => this.renderScoreCells(round.matches[key], "B")).join("")}
-            </tr>
-            <tr class="rr-record-row-group ${rowClass}">
-                <td class="rr-record-label">裁判</td>
-                ${slotKeys.map(key => this.renderResultCells(round.matches[key])).join("")}
-            </tr>
+            <div style="text-align:center; padding:0.2rem;">
+                <div style="font-size:0.75rem; color:var(--accent); font-weight:bold;">${this.escapeHtml(seq)}</div>
+                <div style="font-weight:bold; color:white; font-size:0.85rem; margin-top:2px;">
+                    ${this.escapeHtml(teamA)} <span style="color:var(--text-dim); font-size:0.75rem;">VS</span> ${this.escapeHtml(teamB)}
+                </div>
+                ${scoreHtml}
+            </div>
+        `;
+    },
+
+    renderChasingCell(chasingMatches, matchKey, defaultLabel, defaultTeams) {
+        const clean = (v) => String(v || "").trim();
+        const match = (chasingMatches || []).find(m => {
+            const area = clean(m["區"]);
+            const id = clean(m.id || m["序號"]);
+            return area.includes(matchKey) || id === matchKey || id === defaultLabel;
+        });
+
+        if (!match) {
+            return `
+                <div style="text-align:center; padding:0.2rem;">
+                    <div style="font-size:0.75rem; color:var(--accent); font-weight:bold;">${this.escapeHtml(defaultLabel)}</div>
+                    <div style="font-size:0.8rem; color:var(--text-dim); margin-top:2px;">${this.escapeHtml(defaultTeams)}</div>
+                </div>
+            `;
+        }
+
+        const teamA = match["A隊名"] || "";
+        const teamB = match["B隊名"] || "";
+        const scoreA = match["A隊比分"] ?? "";
+        const scoreB = match["B隊比分"] ?? "";
+        const isDone = String(match["比賽狀態"]).includes("已完賽");
+
+        let scoreHtml = "";
+        if (isDone || (scoreA !== "" && scoreB !== "" && (Number(scoreA) > 0 || Number(scoreB) > 0))) {
+            scoreHtml = `<div style="font-weight:bold; font-size:0.95rem; color:#fbbf24; margin-top:2px;">${scoreA} : ${scoreB}</div>`;
+        }
+
+        return `
+            <div style="text-align:center; padding:0.2rem;">
+                <div style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${this.escapeHtml(defaultLabel)}</div>
+                <div style="font-size:0.85rem; color:white; margin-top:2px;">
+                    ${this.escapeHtml(teamA || "待定")} <span style="color:var(--text-dim); font-size:0.75rem;">VS</span> ${this.escapeHtml(teamB || "待定")}
+                </div>
+                ${scoreHtml}
+            </div>
         `;
     },
 
