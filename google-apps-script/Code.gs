@@ -610,7 +610,64 @@ function logicGenerateSchedule(yearMonth, order = "eggFirst") {
     return { status: "success", message: "【鳥樂賽】12隊預賽賽程已成功產生！" };
   }
 
-  // 【常規賽】產生邏輯
+  const isTeamTogether = (order === "teamTogether" || order === "團隊同場上" || order === "2court");
+
+  if (!isLottery && isTeamTogether) {
+    // 【常規賽 - 團隊同場上 (2場地 9輪模式)】
+    const teamMatchups = [
+      { pair1: [0, 1], pair2: [2, 3] }, // 藍 vs 青 (場B), 黑 vs 粉 (場C)
+      { pair1: [0, 2], pair2: [1, 3] }, // 藍 vs 黑 (場B), 青 vs 粉 (場C)
+      { pair1: [0, 3], pair2: [1, 2] }  // 藍 vs 粉 (場B), 青 vs 黑 (場C)
+    ];
+
+    const roundTimes = ["13:20", "13:35", "13:47", "13:59", "14:14", "14:26", "14:38", "14:53", "15:05"];
+    const areaOrderKeys = ["蛋", "小鳥", "猛"];
+
+    const getAreaFullName = (keyStr) => {
+      return areasFound.find(a => a.includes(keyStr)) || (keyStr === "蛋" ? "鳥蛋區" : keyStr === "猛" ? "猛禽區" : "小鳥區");
+    };
+
+    let sequenceNum = 1;
+    let roundIndex = 0;
+
+    teamMatchups.forEach(mGroup => {
+      areaOrderKeys.forEach(areaKey => {
+        const areaName = getAreaFullName(areaKey);
+        const timeStr = roundTimes[roundIndex] || "13:30";
+        const roundNo = (roundIndex + 1).toString();
+
+        // 場地 B (pair1)
+        const teamA1 = CONFIG.TEAMS[mGroup.pair1[0]];
+        const teamB1 = CONFIG.TEAMS[mGroup.pair1[1]];
+        const playersA1 = regItems.filter(p => p.隊名 === teamA1 && p.區 === areaName);
+        const playersB1 = regItems.filter(p => p.隊名 === teamB1 && p.區 === areaName);
+
+        sheet.appendRow([
+          sequenceNum++, yearMonth, timeStr, roundNo, areaName, "B",
+          teamA1, playersA1[0]?.姓名 || "待定", playersA1[1]?.姓名 || "待定", 0,
+          0, teamB1, playersB1[0]?.姓名 || "待定", playersB1[1]?.姓名 || "待定", "", "待賽"
+        ]);
+
+        // 場地 C (pair2)
+        const teamA2 = CONFIG.TEAMS[mGroup.pair2[0]];
+        const teamB2 = CONFIG.TEAMS[mGroup.pair2[1]];
+        const playersA2 = regItems.filter(p => p.隊名 === teamA2 && p.區 === areaName);
+        const playersB2 = regItems.filter(p => p.隊名 === teamB2 && p.區 === areaName);
+
+        sheet.appendRow([
+          sequenceNum++, yearMonth, timeStr, roundNo, areaName, "C",
+          teamA2, playersA2[0]?.姓名 || "待定", playersA2[1]?.姓名 || "待定", 0,
+          0, teamB2, playersB2[0]?.姓名 || "待定", playersB2[1]?.姓名 || "待定", "", "待賽"
+        ]);
+
+        roundIndex++;
+      });
+    });
+
+    return { status: "success", message: "常規賽賽程已成功產生！(模式：團隊同場上 - 2場地9輪)" };
+  }
+
+  // 【常規賽 - ABC場一起上 (3場地 6輪模式)】
   const matchups = [[0, 2], [1, 3], [0, 1], [2, 3], [0, 3], [1, 2]];
   const roundTimes = ["13:30", "13:45", "14:00", "14:15", "14:30", "14:45"];
   
@@ -637,7 +694,7 @@ function logicGenerateSchedule(yearMonth, order = "eggFirst") {
     });
   });
   
-  return { status: "success", message: `常規賽賽程已成功產生！(順序：${isRaptorFirst ? "猛禽➔小鳥➔鳥蛋" : "鳥蛋➔小鳥➔猛禽"})` };
+  return { status: "success", message: "常規賽賽程已成功產生！(模式：ABC場一起上 - 3場地6輪)" };
 }
 
 /**

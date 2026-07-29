@@ -21,10 +21,10 @@ const Schedule = {
 
     async generate() {
         const orderSelect = document.getElementById("schedule-order-select");
-        const order = orderSelect ? orderSelect.value : "eggFirst";
-        const orderLabel = order === "raptorFirst" ? "【猛禽 ➔ 小鳥 ➔ 鳥蛋】" : "【鳥蛋 ➔ 小鳥 ➔ 猛禽】";
+        const order = orderSelect ? orderSelect.value : "ABC";
+        const orderLabel = order === "teamTogether" ? "【團隊同場上 (2場地 9輪模式)】" : "【ABC場一起上 (3場地 6輪模式)】";
 
-        if (!confirm(`確定要依據 ${orderLabel} 順序產生新的循環賽程嗎？這會清除現有的當月賽程。`)) return;
+        if (!confirm(`確定要依據 ${orderLabel} 模式產生新的循環賽程嗎？這會清除現有的當月賽程。`)) return;
         const res = await API.generateSchedule(order);
         if (res && res.status === "success") {
             alert(res.message || "賽程產生成功！");
