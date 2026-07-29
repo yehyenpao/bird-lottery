@@ -242,16 +242,17 @@ const Bracket = {
     },
 
     renderCourtCell(match, defaultLabel, defaultTeams) {
+        const seq = match && match["序號"] ? `序號${match["序號"]}` : defaultLabel;
+
         if (!match) {
             return `
-                <div style="text-align:center; padding:0.2rem;">
-                    <div style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${this.escapeHtml(defaultLabel)}</div>
-                    <div style="font-size:0.85rem; color:white; margin-top:2px;">${this.escapeHtml(defaultTeams)}</div>
+                <div style="text-align:center; padding:0.25rem;">
+                    <div style="font-size:0.75rem; color:var(--primary); font-weight:bold;">${this.escapeHtml(seq)}</div>
+                    <div style="font-size:0.88rem; color:#000000; font-weight:800; margin-top:2px;">${this.escapeHtml(defaultTeams)}</div>
                 </div>
             `;
         }
 
-        const seq = match["序號"] ? `序號${match["序號"]}` : defaultLabel;
         const teamA = match["A隊名"] || "";
         const teamB = match["B隊名"] || "";
         const scoreA = match["A隊比分"] ?? "";
@@ -263,16 +264,18 @@ const Bracket = {
         if (isDone || (scoreA !== "" && scoreB !== "" && (Number(scoreA) > 0 || Number(scoreB) > 0))) {
             const numA = Number(scoreA) || 0;
             const numB = Number(scoreB) || 0;
-            const colorA = numA > numB ? "#4ade80" : (numB > numA ? "#f87171" : "white");
-            const colorB = numB > numA ? "#4ade80" : (numA > numB ? "#f87171" : "white");
+            const colorA = numA > numB ? "#15803d" : (numB > numA ? "#b91c1c" : "#000000");
+            const colorB = numB > numA ? "#15803d" : (numA > numB ? "#b91c1c" : "#000000");
             scoreHtml = `<div style="font-weight:bold; font-size:0.95rem; margin-top:2px;"><span style="color:${colorA}">${numA}</span> : <span style="color:${colorB}">${numB}</span></div>`;
         }
 
         return `
-            <div style="text-align:center; padding:0.2rem;">
+            <div style="text-align:center; padding:0.25rem;">
                 <div style="font-size:0.75rem; color:var(--accent); font-weight:bold;">${this.escapeHtml(seq)}</div>
-                <div style="font-weight:bold; color:white; font-size:0.85rem; margin-top:2px;">
-                    ${this.escapeHtml(teamA)} <span style="color:var(--text-dim); font-size:0.75rem;">VS</span> ${this.escapeHtml(teamB)}
+                <div style="font-weight:800; color:#000000; font-size:0.88rem; margin-top:2px;">
+                    <span style="color:#000000; font-weight:800;">${this.escapeHtml(teamA)}</span> 
+                    <span style="color:#475569; font-size:0.75rem; font-weight:bold;">VS</span> 
+                    <span style="color:#000000; font-weight:800;">${this.escapeHtml(teamB)}</span>
                 </div>
                 ${scoreHtml}
             </div>
@@ -289,9 +292,9 @@ const Bracket = {
 
         if (!match) {
             return `
-                <div style="text-align:center; padding:0.2rem;">
+                <div style="text-align:center; padding:0.25rem;">
                     <div style="font-size:0.75rem; color:var(--accent); font-weight:bold;">${this.escapeHtml(defaultLabel)}</div>
-                    <div style="font-size:0.8rem; color:var(--text-dim); margin-top:2px;">${this.escapeHtml(defaultTeams)}</div>
+                    <div style="font-size:0.85rem; color:#000000; font-weight:800; margin-top:2px;">${this.escapeHtml(defaultTeams)}</div>
                 </div>
             `;
         }
