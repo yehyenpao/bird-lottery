@@ -228,8 +228,8 @@ const Bracket = {
                                 <td style="padding:8px; border:1px solid var(--border);">16:10-16:50</td>
                                 <td style="padding:8px; border:1px solid var(--border); font-weight:bold;">最終排名賽<br><small style="color:#38bdf8;">40分鐘比賽</small></td>
                                 <td style="padding:8px; border:1px solid var(--border); color:var(--text-dim);">NA</td>
-                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "季軍戰", "季軍戰(序號21)", '<span style="color:#ef4444; font-weight:bold;">複賽敗隊</span> VS <span style="color:#ef4444; font-weight:bold;">複賽敗隊</span>')}</td>
-                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "冠軍賽", "冠亞軍戰(序號22)", '<span style="color:#3b82f6; font-weight:bold;">複賽勝隊</span> VS <span style="color:#3b82f6; font-weight:bold;">複賽勝隊</span>')}</td>
+                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "季軍戰", "季軍戰(序號21)", "複賽敗隊 VS 複賽敗隊")}</td>
+                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "冠軍賽", "冠亞軍戰(序號22)", "複賽勝隊 VS 複賽勝隊")}</td>
                             </tr>
 
                             <!-- 16:50-17:00 頒獎 -->
@@ -298,10 +298,17 @@ const Bracket = {
         });
 
         if (!match) {
+            let teamsHtml = this.escapeHtml(defaultTeams);
+            if (defaultTeams.includes("複賽敗隊")) {
+                teamsHtml = `<span style="color:#ef4444; font-weight:bold;">複賽敗隊</span> <span style="color:#475569; font-size:0.75rem;">VS</span> <span style="color:#ef4444; font-weight:bold;">複賽敗隊</span>`;
+            } else if (defaultTeams.includes("複賽勝隊")) {
+                teamsHtml = `<span style="color:#3b82f6; font-weight:bold;">複賽勝隊</span> <span style="color:#475569; font-size:0.75rem;">VS</span> <span style="color:#3b82f6; font-weight:bold;">複賽勝隊</span>`;
+            }
+
             return `
                 <div style="text-align:center; padding:0.25rem;">
                     <div style="font-size:0.75rem; color:var(--accent); font-weight:bold;">${this.escapeHtml(defaultLabel)}</div>
-                    <div style="font-size:0.85rem; color:#000000; font-weight:800; margin-top:2px;">${this.escapeHtml(defaultTeams)}</div>
+                    <div style="font-size:0.85rem; color:#000000; font-weight:800; margin-top:2px;">${teamsHtml}</div>
                 </div>
             `;
         }
