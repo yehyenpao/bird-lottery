@@ -500,9 +500,19 @@ const Results = {
     renderRoundMatchRow(round, slot, slotIndex) {
         const match = round.matchBySlot[slot.key] || null;
         const orderLabel = `#${((round.order - 1) * round.areaSlots.length) + slotIndex + 1}.對打${slotIndex + 1}`;
-        const teamA = this.extractRoundTeamCell(match, round.teamAName);
-        const teamB = this.extractRoundTeamCell(match, round.teamBName);
+        const teamA = this.extractRoundTeamCell(match, round.teamAName, true);
+        const teamB = this.extractRoundTeamCell(match, round.teamBName, false);
         const referee = match ? this.escapeHtml(String(match["裁判"] || "").trim()) : "";
+
+        let playerA1 = teamA.player1;
+        let playerB1 = teamB.player1;
+
+        if (match && teamA.teamName && teamA.teamName !== round.teamAName) {
+            playerA1 = `<span style="font-weight:bold; color:var(--primary); font-size:0.8rem;">(${this.escapeHtml(teamA.teamName)})</span> ${teamA.player1}`;
+        }
+        if (match && teamB.teamName && teamB.teamName !== round.teamBName) {
+            playerB1 = `<span style="font-weight:bold; color:var(--primary); font-size:0.8rem;">(${this.escapeHtml(teamB.teamName)})</span> ${teamB.player1}`;
+        }
 
         return `
             <tr class="results-detail-row">
@@ -511,10 +521,10 @@ const Results = {
                     <div class="results-detail-court-key">${this.escapeHtml(slot.key)}</div>
                     <div class="results-detail-court-area">${this.escapeHtml(slot.label)}</div>
                 </td>
-                <td class="results-detail-player">${teamA.player1}</td>
+                <td class="results-detail-player">${playerA1}</td>
                 <td class="results-detail-player">${teamA.player2}</td>
                 <td class="results-detail-score${teamA.isWin ? " is-win" : ""}">${teamA.score}</td>
-                <td class="results-detail-player">${teamB.player1}</td>
+                <td class="results-detail-player">${playerB1}</td>
                 <td class="results-detail-player">${teamB.player2}</td>
                 <td class="results-detail-score${teamB.isWin ? " is-win" : ""}">${teamB.score}</td>
                 <td class="results-detail-referee">${referee}</td>
@@ -540,14 +550,14 @@ const Results = {
         `;
     },
 
-    extractRoundTeamCell(match, teamName) {
-        if (!match || !teamName) {
-            return { player1: "", player2: "", score: "", isWin: false };
+    extractRoundTeamCell(match, expectedTeamName, isSideA = true) {
+        if (!match) {
+            return { teamName: "", player1: "", player2: "", score: "", isWin: false };
         }
 
-        const side = this.getMatchSideForTeam(match, teamName);
+        let side = expectedTeamName ? this.getMatchSideForTeam(match, expectedTeamName) : "";
         if (!side) {
-            return { player1: "", player2: "", score: "", isWin: false };
+            side = isSideA ? "A" : "B";
         }
 
         const otherSide = side === "A" ? "B" : "A";
@@ -556,8 +566,10 @@ const Results = {
         const scoreText = String(match[`${side}隊比分`] ?? "").trim();
         const ownScore = Number(match[`${side}隊比分`] || 0);
         const rivalScore = Number(match[`${otherSide}隊比分`] || 0);
+        const teamName = String(match[`${side}隊名`] || "").trim();
 
         return {
+            teamName,
             player1,
             player2,
             score: this.escapeHtml(scoreText),
