@@ -106,15 +106,15 @@ const Bracket = {
         };
 
         const roundsDef = [
-            { roundNo: 1, time: "13:20-13:35", desc: "循環賽1<br><small style='color:#38bdf8;'>3分列隊<br>12分鐘比賽</small>", team: "鳥蛋", seqB: "序號1", seqC: "序號2", teamsB: "藍鳥 VS 青鳥", teamsC: "黑鳥 VS 粉鳥" },
-            { roundNo: 2, time: "13:35-13:47", desc: "循環賽2<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "小鳥", seqB: "序號3", seqC: "序號4", teamsB: "藍鳥 VS 青鳥", teamsC: "黑鳥 VS 粉鳥" },
-            { roundNo: 3, time: "13:47-13:59", desc: "循環賽3<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "猛禽", seqB: "序號5", seqC: "序號6", teamsB: "藍鳥 VS 青鳥", teamsC: "黑鳥 VS 粉鳥" },
-            { roundNo: 4, time: "13:59-14:14", desc: "循環賽4<br><small style='color:#38bdf8;'>3分列隊<br>12分鐘比賽</small>", team: "鳥蛋", seqB: "序號7", seqC: "序號8", teamsB: "藍鳥 VS 黑鳥", teamsC: "青鳥 VS 粉鳥" },
-            { roundNo: 5, time: "14:14-14:26", desc: "循環賽5<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "小鳥", seqB: "序號9", seqC: "序號10", teamsB: "藍鳥 VS 黑鳥", teamsC: "青鳥 VS 粉鳥" },
-            { roundNo: 6, time: "14:26-14:38", desc: "循環賽6<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "猛禽", seqB: "序號11", seqC: "序號12", teamsB: "藍鳥 VS 黑鳥", teamsC: "青鳥 VS 粉鳥" },
-            { roundNo: 7, time: "14:38-14:53", desc: "循環賽7<br><small style='color:#38bdf8;'>3分列隊<br>12分鐘比賽</small>", team: "鳥蛋", seqB: "序號13", seqC: "序號14", teamsB: "藍鳥 VS 粉鳥", teamsC: "青鳥 VS 黑鳥" },
-            { roundNo: 8, time: "14:53-15:05", desc: "循環賽8<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "小鳥", seqB: "序號15", seqC: "序號16", teamsB: "藍鳥 VS 粉鳥", teamsC: "青鳥 VS 黑鳥" },
-            { roundNo: 9, time: "15:05-15:17", desc: "循環賽9<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "猛禽", seqB: "序號17", seqC: "序號18", teamsB: "藍鳥 VS 粉鳥", teamsC: "青鳥 VS 黑鳥" }
+            { roundNo: 1, time: "13:20-13:35", desc: "第1輪<br><small style='color:#38bdf8;'>3分列隊<br>12分鐘比賽</small>", team: "鳥蛋", seqB: "序號1", seqC: "序號2", teamsB: "藍鳥 VS 黑鳥", teamsC: "青鳥 VS 粉鳥" },
+            { roundNo: 2, time: "13:35-13:47", desc: "第2輪<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "小鳥", seqB: "序號3", seqC: "序號4", teamsB: "藍鳥 VS 黑鳥", teamsC: "青鳥 VS 粉鳥" },
+            { roundNo: 3, time: "13:47-13:59", desc: "第3輪<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "猛禽", seqB: "序號5", seqC: "序號6", teamsB: "藍鳥 VS 黑鳥", teamsC: "青鳥 VS 粉鳥" },
+            { roundNo: 4, time: "13:59-14:14", desc: "第4輪<br><small style='color:#38bdf8;'>3分列隊<br>12分鐘比賽</small>", team: "鳥蛋", seqB: "序號7", seqC: "序號8", teamsB: "藍鳥 VS 青鳥", teamsC: "黑鳥 VS 粉鳥" },
+            { roundNo: 5, time: "14:14-14:26", desc: "第5輪<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "小鳥", seqB: "序號9", seqC: "序號10", teamsB: "藍鳥 VS 青鳥", teamsC: "黑鳥 VS 粉鳥" },
+            { roundNo: 6, time: "14:26-14:38", desc: "第6輪<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "猛禽", seqB: "序號11", seqC: "序號12", teamsB: "藍鳥 VS 青鳥", teamsC: "黑鳥 VS 粉鳥" },
+            { roundNo: 7, time: "14:38-14:53", desc: "第7輪<br><small style='color:#38bdf8;'>3分列隊<br>12分鐘比賽</small>", team: "鳥蛋", seqB: "序號13", seqC: "序號14", teamsB: "藍鳥 VS 粉鳥", teamsC: "黑鳥 VS 青鳥" },
+            { roundNo: 8, time: "14:53-15:05", desc: "第8輪<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "小鳥", seqB: "序號15", seqC: "序號16", teamsB: "藍鳥 VS 粉鳥", teamsC: "黑鳥 VS 青鳥" },
+            { roundNo: 9, time: "15:05-15:17", desc: "第9輪<br><small style='color:#38bdf8;'>12分鐘比賽</small>", team: "猛禽", seqB: "序號17", seqC: "序號18", teamsB: "藍鳥 VS 粉鳥", teamsC: "黑鳥 VS 青鳥" }
         ];
 
         return `
@@ -127,9 +127,9 @@ const Bracket = {
                     <table class="rr-record-table timetable-grid" style="width:100%; border-collapse:collapse; text-align:center;">
                         <thead>
                             <tr style="background: rgba(30, 41, 59, 0.9); color: var(--accent);">
-                                <th style="width:12%; padding:10px; border:1px solid var(--border);">時間</th>
-                                <th style="width:18%; padding:10px; border:1px solid var(--border);">行程</th>
-                                <th style="width:10%; padding:10px; border:1px solid var(--border);">隊伍</th>
+                                <th style="width:12%; padding:10px; border:1px solid var(--border);">比賽時間</th>
+                                <th style="width:18%; padding:10px; border:1px solid var(--border);">輪次</th>
+                                <th style="width:10%; padding:10px; border:1px solid var(--border);">區</th>
                                 <th style="width:20%; padding:10px; border:1px solid var(--border);">場A</th>
                                 <th style="width:20%; padding:10px; border:1px solid var(--border);">場B</th>
                                 <th style="width:20%; padding:10px; border:1px solid var(--border);">場C</th>
@@ -143,7 +143,7 @@ const Bracket = {
                                 <td style="padding:10px; border:1px solid var(--border); color:var(--text-dim);">先來先用</td>
                                 <td colspan="3" style="padding:10px; border:1px solid var(--border); background:rgba(255,255,255,0.02);">
                                     <b>自由使用</b><br>
-                                    <small style="color:var(--text-dim);">抽籤分隊伍、主審協助完成各場名單登錄</small>
+                                    <small style="color:#38bdf8;">抽籤分隊伍、主審協助完成各場名單登錄</small>
                                 </td>
                             </tr>
 
@@ -167,8 +167,12 @@ const Bracket = {
                                     <td style="padding:8px; border:1px solid var(--border);">${r.desc}</td>
                                     <td style="padding:8px; border:1px solid var(--border); font-weight:bold; color:var(--primary);">${r.team}</td>
                                     ${idx === 0 ? `
-                                        <td rowspan="9" style="padding:12px; border:1px solid var(--border); vertical-align:middle; background:rgba(251,191,36,0.08); color:#fbbf24; font-weight:bold;">
+                                        <td rowspan="5" style="padding:12px; border:1px solid var(--border); vertical-align:middle; background:rgba(251,191,36,0.08); color:#fbbf24; font-weight:bold;">
                                             自由使用，建議下一輪對戰的可以先簡單熱身 3~5 分鐘
+                                        </td>
+                                    ` : idx === 5 ? `
+                                        <td rowspan="10" style="padding:12px; border:1px solid var(--border); vertical-align:middle; background:rgba(239,68,68,0.12); color:#f87171; font-weight:bold;">
+                                            14:00開始，取消A場，不可使用
                                         </td>
                                     ` : ''}
                                     <td style="padding:8px; border:1px solid var(--border);">${this.renderCourtCell(getMatch(r.roundNo, "B"), r.seqB, r.teamsB)}</td>
@@ -181,21 +185,24 @@ const Bracket = {
                                 <td style="padding:10px; border:1px solid var(--border);">15:17-15:20</td>
                                 <td style="padding:10px; border:1px solid var(--border); font-weight:bold;">排名結果</td>
                                 <td style="padding:10px; border:1px solid var(--border); color:var(--text-dim);">NA</td>
-                                <td rowspan="6" style="padding:12px; border:1px solid var(--border); vertical-align:middle; background:rgba(239,68,68,0.12); color:#f87171; font-weight:bold;">
-                                    15:00開始，取消A場，不可使用
-                                </td>
                                 <td colspan="2" style="padding:10px; border:1px solid var(--border); background:rgba(255,255,255,0.02); font-weight:bold; color:var(--accent);">
-                                    循環賽成績公布 / 複賽 (羽球接力賽)
+                                    循環賽成績公布 / 複賽(3對3)
                                 </td>
                             </tr>
 
                             <!-- 15:20-15:25 複賽分隊 -->
                             <tr style="border-bottom:1px solid var(--border);">
                                 <td style="padding:8px; border:1px solid var(--border);">15:20-15:25</td>
-                                <td style="padding:8px; border:1px solid var(--border);">複賽<br><small style="color:#38bdf8;">5分鐘分隊</small></td>
+                                <td style="padding:8px; border:1px solid var(--border);">複賽<br><small style="color:#ef4444; font-weight:bold;">5分鐘分隊</small></td>
                                 <td style="padding:8px; border:1px solid var(--border); color:var(--text-dim);">NA</td>
-                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; color:var(--text-dim);">循環排名3 VS 循環排名2</td>
-                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; color:var(--text-dim);">循環排名4 VS 循環排名1</td>
+                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; font-weight:bold; color:#000000;">
+                                    <span style="display:inline-block; padding:2px 8px; border:1px solid var(--border); border-radius:4px; margin:2px;">循環排名3</span>
+                                    <span style="display:inline-block; padding:2px 8px; border:1px solid var(--border); border-radius:4px; margin:2px;">循環排名2</span>
+                                </td>
+                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; font-weight:bold; color:#000000;">
+                                    <span style="display:inline-block; padding:2px 8px; border:1px solid var(--border); border-radius:4px; margin:2px;">循環排名4</span>
+                                    <span style="display:inline-block; padding:2px 8px; border:1px solid var(--border); border-radius:4px; margin:2px;">循環排名1</span>
+                                </td>
                             </tr>
 
                             <!-- 15:25-16:05 複賽對戰 -->
@@ -210,10 +217,10 @@ const Bracket = {
                             <!-- 16:05-16:10 最終排名賽分隊 -->
                             <tr style="border-bottom:1px solid var(--border);">
                                 <td style="padding:8px; border:1px solid var(--border);">16:05-16:10</td>
-                                <td style="padding:8px; border:1px solid var(--border);">最終排名賽<br><small style="color:#38bdf8;">5分鐘分隊</small></td>
+                                <td style="padding:8px; border:1px solid var(--border);">最終排名賽<br><small style="color:#ef4444; font-weight:bold;">5分鐘分隊</small></td>
                                 <td style="padding:8px; border:1px solid var(--border); color:var(--text-dim);">NA</td>
-                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; color:var(--text-dim);">季軍戰(序號21)</td>
-                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; color:var(--text-dim);">冠亞軍戰(序號22)</td>
+                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; font-weight:bold; color:#000000;">季軍戰(序號21)</td>
+                                <td style="padding:8px; border:1px solid var(--border); font-size:0.85rem; font-weight:bold; color:#000000;">冠亞軍戰(序號22)</td>
                             </tr>
 
                             <!-- 16:10-16:50 最終排名賽對戰 -->
@@ -221,8 +228,8 @@ const Bracket = {
                                 <td style="padding:8px; border:1px solid var(--border);">16:10-16:50</td>
                                 <td style="padding:8px; border:1px solid var(--border); font-weight:bold;">最終排名賽<br><small style="color:#38bdf8;">40分鐘比賽</small></td>
                                 <td style="padding:8px; border:1px solid var(--border); color:var(--text-dim);">NA</td>
-                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "季軍戰", "季軍戰(序號21)", "複賽敗隊 VS 複賽敗隊")}</td>
-                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "冠軍賽", "冠亞軍戰(序號22)", "複賽勝隊 VS 複賽勝隊")}</td>
+                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "季軍戰", "季軍戰(序號21)", '<span style="color:#ef4444; font-weight:bold;">複賽敗隊</span> VS <span style="color:#ef4444; font-weight:bold;">複賽敗隊</span>')}</td>
+                                <td style="padding:8px; border:1px solid var(--border);">${this.renderChasingCell(chasingMatches, "冠軍賽", "冠亞軍戰(序號22)", '<span style="color:#3b82f6; font-weight:bold;">複賽勝隊</span> VS <span style="color:#3b82f6; font-weight:bold;">複賽勝隊</span>')}</td>
                             </tr>
 
                             <!-- 16:50-17:00 頒獎 -->

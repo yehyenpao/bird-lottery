@@ -615,9 +615,9 @@ function logicGenerateSchedule(yearMonth, order = "eggFirst") {
   if (!isLottery && isTeamTogether) {
     // 【常規賽 - 團隊同場上 (2場地 9輪模式)】
     const teamMatchups = [
-      { pair1: [0, 1], pair2: [2, 3] }, // 藍 vs 青 (場B), 黑 vs 粉 (場C)
-      { pair1: [0, 2], pair2: [1, 3] }, // 藍 vs 黑 (場B), 青 vs 粉 (場C)
-      { pair1: [0, 3], pair2: [1, 2] }  // 藍 vs 粉 (場B), 青 vs 黑 (場C)
+      { pair1: [0, 2], pair2: [1, 3] }, // 1~3輪 (13:20~13:59): 藍 vs 黑 (場B), 青 vs 粉 (場C) [序號 1~6]
+      { pair1: [0, 1], pair2: [2, 3] }, // 4~6輪 (13:59~14:38): 藍 vs 青 (場B), 黑 vs 粉 (場C) [序號 7~12]
+      { pair1: [0, 3], pair2: [2, 1] }  // 7~9輪 (14:38~15:17): 藍 vs 粉 (場B), 黑 vs 青 (場C) [序號 13~18]
     ];
 
     const roundTimes = ["13:20", "13:35", "13:47", "13:59", "14:14", "14:26", "14:38", "14:53", "15:05"];
