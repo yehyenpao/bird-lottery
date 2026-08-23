@@ -152,12 +152,10 @@ const Results = {
             const teamB = clean(match["B隊名"]);
             if (!teamA || !teamB || !stats[teamA] || !stats[teamB]) return;
 
-            const round = clean(match["輪次"]);
             const pairKey = [teamA, teamB].sort().join("::");
-            const groupKey = `${round}||${pairKey}`;
 
-            if (!comboGroups[groupKey]) {
-                comboGroups[groupKey] = {
+            if (!comboGroups[pairKey]) {
+                comboGroups[pairKey] = {
                     teamA,
                     teamB,
                     wins: { [teamA]: 0, [teamB]: 0 }
@@ -166,8 +164,8 @@ const Results = {
 
             const scoreA = parseInt(match["A隊比分"] || 0, 10);
             const scoreB = parseInt(match["B隊比分"] || 0, 10);
-            if (scoreA > scoreB) comboGroups[groupKey].wins[teamA]++;
-            if (scoreB > scoreA) comboGroups[groupKey].wins[teamB]++;
+            if (scoreA > scoreB) comboGroups[pairKey].wins[teamA]++;
+            if (scoreB > scoreA) comboGroups[pairKey].wins[teamB]++;
         });
 
         Object.values(comboGroups).forEach(group => {

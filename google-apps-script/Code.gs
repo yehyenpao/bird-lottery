@@ -805,25 +805,23 @@ function helperGetTeamRankings(yearMonth) {
     }
   });
 
-  // 計算「勝負場積分」 (每輪 3 場組合對決勝負：勝+2 / 敗+1)
+  // 計算「勝負場積分」 (每輪 3 戰 2 勝組合對決勝負：勝+2 / 敗+1)
   const comboGroups = {};
   items.forEach(match => {
     const teamA = clean(match["A隊名"]);
     const teamB = clean(match["B隊名"]);
     if (!teamA || !teamB || !stats[teamA] || !stats[teamB]) return;
 
-    const round = clean(match["輪次"]);
     const pairKey = [teamA, teamB].sort().join("::");
-    const groupKey = round + "||" + pairKey;
 
-    if (!comboGroups[groupKey]) {
-      comboGroups[groupKey] = { teamA, teamB, wins: { [teamA]: 0, [teamB]: 0 } };
+    if (!comboGroups[pairKey]) {
+      comboGroups[pairKey] = { teamA, teamB, wins: { [teamA]: 0, [teamB]: 0 } };
     }
 
     const scoreA = parseInt(match["A隊比分"] || 0, 10);
     const scoreB = parseInt(match["B隊比分"] || 0, 10);
-    if (scoreA > scoreB) comboGroups[groupKey].wins[teamA]++;
-    if (scoreB > scoreA) comboGroups[groupKey].wins[teamB]++;
+    if (scoreA > scoreB) comboGroups[pairKey].wins[teamA]++;
+    if (scoreB > scoreA) comboGroups[pairKey].wins[teamB]++;
   });
 
   Object.values(comboGroups).forEach(group => {
